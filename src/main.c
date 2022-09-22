@@ -10,75 +10,12 @@ Cell counting program - Ass1
 #include "cbmp.h"
 
 // TODO: add morph enum for erode and dilation here:)
+// TODO: add enum for drawing:)
 
 unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
-unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH];
-unsigned char intermedia_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
-unsigned char test_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
-unsigned char output_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
-
-void create_binary(unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char output_image[BMP_WIDTH][BMP_HEIGTH]);
-void create_binary_image(unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char output_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS]);
-bool is_on_edge(int x, int y, int width, int height);
-void morph();
-bool erode(); 
-bool erode_image(unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char output_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS]);
-bool dilation();
-void draw_x(int x, int y);
-void count_cells();
-
-
-
-int main(int argc, char** argv) {
-  //argc counts how may arguments are passed
-  //argv[0] is a string with the name of the program
-  //argv[1] is the first command line argument (input image)
-  //argv[2] is the second command line argument (output image)
-
-  //Checking that 2 arguments are passed
-  if (argc != 3) {
-      fprintf(stderr, "Usage: %s <input file path> <output file path>\n", argv[0]);
-      exit(1);
-  }
-
-  printf("Cell detection program - 02132 - Ass1\n");
-
-  read_bitmap(argv[1], input_image);
-
-  create_binary_image(input_image, intermedia_image);
-
-  //write_bitmap(intermedia_image, argv[2]);
-
-
-
-  //erode(binary_image, output_image);
-
-  // create_binary_image(input_image, intermedia_image);
-
-  //erode_image(binary_image, intermedia_image);
-
-  // while(1) {
-  //   if (!erode())
-  //     break;
-  //
-  //   detect cells
-  // }
-
-
-  erode_image(intermedia_image, output_image);
-
-  erode_image(output_image, intermedia_image);
-  erode_image(intermedia_image, output_image);
-  erode_image(output_image, intermedia_image);
-  //erode_image(intermedia_image, output_image);
-  //erode_image(intermedia_image, output_image);
-  
-
-  write_bitmap(intermedia_image, argv[2]);
-
-  printf("Done!\n");
-  return 0;
-}
+unsigned char tempA_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
+unsigned char tempB_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
+int cellCount = 0; 
 
 
 
@@ -130,7 +67,7 @@ bool erode_image(unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS],
     for (int y = 0; y < BMP_HEIGTH; ++y) {
       if (is_on_edge(x, y, BMP_WIDTH, BMP_HEIGTH)) {
         if (input_image[x][y][0] == 255) {
-          output_image[x][y][0] = 255;
+          output_image[x][y][0] = 0;
           output_image[x][y][1] = 0;
           output_image[x][y][2] = 0;
           wasEroded = true;
@@ -165,10 +102,113 @@ bool erode_image(unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS],
   return wasEroded; 
 }
 
-void draw_x(int x, int y) {
+bool detection_frame_clear(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int x, int y, int totalWidth) {
+  for (int i = 0; i < totalWidth; ++i)
+    for (int j = 0; j < totalWidth; ++j)
+      if (i == 0 || i == totalWidth - 1 || j == 0 || j == totalWidth - 1)
+        if (image[x + i][y + j][0] == 255)
+          return false;
 
+  return true; 
 }
 
-void count_cells() {
+bool cell_detected(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int x, int y, int capAreaWidth) {
+  for (int i = 1; i <= capAreaWidth; ++i)
+    for (int j = 1; j <= capAreaWidth; ++j)
+      if (image[x + i][y + j][0] == 255)
+        return true;
 
+  return false; 
 }
+
+void draw_detection_indication(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int x, int y, int totalWidth) {
+  for (int i = 0; i < totalWidth; ++i)
+    for (int j = 0; j < totalWidth; ++j)
+      if (i == 0 || i == totalWidth - 1 || j == 0 || j == totalWidth - 1) {
+        image[x + i][y + j][0] = 255;
+        image[x + i][y + j][1] = 0;
+        image[x + i][y + j][2] = 255;
+      }
+}
+
+void remove_cell(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int x, int y, int capAreaWidth) {
+  // TODO: maybe only color white parts of the image; there's no need to color black pixels black
+  for (int i = 1; i < capAreaWidth; ++i)
+    for (int j = 1; j < capAreaWidth; ++j) {
+      image[x + i][y + j][0] = 0;
+      image[x + i][y + j][1] = 0;
+      image[x + i][y + j][2] = 0;
+    }
+}
+
+void detect_cells(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char out_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int* cellCount, bool printCoords) {
+  // TODO: we assume that the erosion erases the border pixels of the image
+  int frameWidth = 1;
+  int capAreaWidth = 12; 
+  // TODO: Maybe change the capture area to be 2d array
+
+  for (int x = 0; x < BMP_WIDTH - capAreaWidth; ++x)
+    for (int y = 0; y < BMP_WIDTH - capAreaWidth; ++y)
+      
+      if (detection_frame_clear(in_image, x, y, capAreaWidth + frameWidth))
+        if (cell_detected(in_image, x, y, capAreaWidth)) {
+          draw_detection_indication(out_image, x, y, capAreaWidth + frameWidth);
+          remove_cell(in_image, x, y, capAreaWidth);
+          ++*cellCount;
+          if (printCoords)
+            // TODO: modify this to be the center
+            printf("cell #%d: (%d, %d)\n", *cellCount, x, y);
+        }
+}
+
+
+
+int main(int argc, char** argv) {
+  if (argc != 3) {
+      fprintf(stderr, "Usage: %s <input file path> <output file path>\n", argv[0]);
+      exit(1);
+  }
+
+  printf("Cell detection program - 02132 - Ass1\n");
+
+  // Step 1: Load input image
+  read_bitmap(argv[1], input_image);
+  
+  // create_binary_image(input_image, binary_image);
+
+  // erode_image(binary_image, intermedia_image);
+  // erode_image(intermedia_image, test_image0);
+  // erode_image(test_image0, test_image1);
+  // erode_image(test_image1, test_image2);
+  // erode_image(test_image2, test_image0);
+  // erode_image(test_image0, test_image1);
+  // erode_image(test_image1, test_image2);
+  // erode_image(test_image2, test_image0);
+  // erode_image(test_image0, test_image1);
+
+  // detect_cells(test_image1, input_image, &cellCount, false);
+
+  // write_bitmap(test_image1, argv[2]);
+
+  
+  // Step 2 and 3: Convert from RGB to GrayScale and apply the binary threshold to create a binary image
+  create_binary_image(input_image, intermedia_image);
+
+  // TODO: Why erode the image first? Shouldn't we detect the cells we can and then erode? or are we trying to get rid of noise? 
+  // Step 4: Erode the binary image
+  printf("Cell detection results:");
+  while(erode()) {
+    // Step 5 and 6: Detect cells and print results
+    detect_cells(test_image1, input_image, &cellCount, true);
+  }
+
+  printf("\tA total of %d %s detected", cellCount, cellCount > 1 ? "cells were" : "cell was");
+
+  // Step 7: Save output image and print results
+  write_bitmap(input_image, argv[2]);
+
+  printf("cells detected: %d\n", cellCount);
+  printf("Done!\n");
+  return 0;
+}
+
