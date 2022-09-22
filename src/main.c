@@ -13,8 +13,7 @@ Cell counting program - Ass1
 // TODO: add enum for drawing:)
 
 unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
-unsigned char tempA_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
-unsigned char tempB_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
+unsigned char intermedia_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
 int cellCount = 0; 
 
 
@@ -122,13 +121,35 @@ bool cell_detected(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int
 }
 
 void draw_detection_indication(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int x, int y, int totalWidth) {
+  int detection_indication[13][13] = {{0,0,0,0,0,0,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,0,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,0,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,1,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,1,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,1,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,1,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,1,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,1,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,1,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,1,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,1,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,1,0,0,0,0,0,0,0},}; 
+  
   for (int i = 0; i < totalWidth; ++i)
     for (int j = 0; j < totalWidth; ++j)
-      if (i == 0 || i == totalWidth - 1 || j == 0 || j == totalWidth - 1) {
+      if (detection_indication[i][j] == 1) {
         image[x + i][y + j][0] = 255;
         image[x + i][y + j][1] = 0;
         image[x + i][y + j][2] = 255;
       }
+
+  // for (int i = 0; i < totalWidth; ++i)
+  //   for (int j = 0; j < totalWidth; ++j)
+  //     if (i == 0 || i == totalWidth - 1 || j == 0 || j == totalWidth - 1) {
+  //       image[x + i][y + j][0] = 255;
+  //       image[x + i][y + j][1] = 0;
+  //       image[x + i][y + j][2] = 255;
+  //     }
 }
 
 void remove_cell(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int x, int y, int capAreaWidth) {
@@ -174,32 +195,20 @@ int main(int argc, char** argv) {
   // Step 1: Load input image
   read_bitmap(argv[1], input_image);
   
-  // create_binary_image(input_image, binary_image);
-
-  // erode_image(binary_image, intermedia_image);
-  // erode_image(intermedia_image, test_image0);
-  // erode_image(test_image0, test_image1);
-  // erode_image(test_image1, test_image2);
-  // erode_image(test_image2, test_image0);
-  // erode_image(test_image0, test_image1);
-  // erode_image(test_image1, test_image2);
-  // erode_image(test_image2, test_image0);
-  // erode_image(test_image0, test_image1);
-
-  // detect_cells(test_image1, input_image, &cellCount, false);
-
-  // write_bitmap(test_image1, argv[2]);
-
-  
   // Step 2 and 3: Convert from RGB to GrayScale and apply the binary threshold to create a binary image
   create_binary_image(input_image, intermedia_image);
 
   // TODO: Why erode the image first? Shouldn't we detect the cells we can and then erode? or are we trying to get rid of noise? 
   // Step 4: Erode the binary image
   printf("Cell detection results:");
-  while(erode()) {
+
+  int step = 0;
+  while(erode(intermedia_image)) {
+    // print steps for debugging
+    write_bitmap(intermedia_image, "step_%d_%s", step++, argv[2]);
+
     // Step 5 and 6: Detect cells and print results
-    detect_cells(test_image1, input_image, &cellCount, true);
+    detect_cells(intermedia_image, input_image, &cellCount, true);
   }
 
   printf("\tA total of %d %s detected", cellCount, cellCount > 1 ? "cells were" : "cell was");
