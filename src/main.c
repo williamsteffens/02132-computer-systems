@@ -30,8 +30,8 @@ void create_binary(unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS
   for (int x = 0; x < BMP_WIDTH; ++x) {
     for (int y = 0; y < BMP_HEIGTH; ++y) {
         // TODO: otsu metode???
-        int avg = (input_image[x][y][0] + input_image[x][y][1] + input_image[x][y][2]) / 3;
-        output_image[x][y] = avg > 90 ? 255 : 0;
+        int avg = (input_image[x][y][0] + input_image[x][y][1] + input_image[x][y][2]);
+        output_image[x][y] = avg > 270 ? 255 : 0;
     }
   }
 }
@@ -40,8 +40,8 @@ void create_binary_image(unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CH
   for (int x = 0; x < BMP_WIDTH; ++x) {
     for (int y = 0; y < BMP_HEIGTH; ++y) {
       for (int c = 0; c < BMP_CHANNELS; ++c) {
-        int avg = (input_image[x][y][0] + input_image[x][y][1] + input_image[x][y][2]) / 3;
-        output_image[x][y][c] = avg > 90 ? 255 : 0;
+        int avg = (input_image[x][y][0] + input_image[x][y][1] + input_image[x][y][2]);
+        output_image[x][y][c] = avg > 270 ? 255 : 0;
       }
     }
   }
