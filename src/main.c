@@ -18,10 +18,11 @@ unsigned char intermedia_image1[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
 unsigned char (*image0_ptr)[BMP_HEIGTH][BMP_CHANNELS] = intermedia_image0;
 unsigned char (*image1_ptr)[BMP_HEIGTH][BMP_CHANNELS] = intermedia_image1;
 unsigned char (*tmp_ptr)[BMP_HEIGTH][BMP_CHANNELS];
-bool debug = true; 
+bool debug = false; 
 int step = 0;
 int cellCount = 0; 
 char buffer[50];
+char output_file_name[50];
 
 
 
@@ -128,26 +129,26 @@ bool cell_detected(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int
 }
 
 void draw_detection_indication(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int x, int y, int totalWidth) {
-  int detection_indication[13][13] = {{0,0,0,0,0,1,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,1,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,1,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,1,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,1,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,1,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,1,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,1,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,1,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,1,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,1,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,1,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,1,0,0,0,0,0,0,0},}; 
+  int detection_indication[13][13] = {{0,0,1,0,0,0,0,1,0,0,0,0,0},
+                                      {0,0,1,1,0,0,0,0,1,0,0,0,0},
+                                      {0,0,1,1,1,0,0,0,0,1,0,0,0},
+                                      {0,0,1,1,1,0,0,0,0,0,1,0,0},
+                                      {0,0,1,1,0,0,0,0,0,0,1,0,0},
+                                      {0,0,1,0,0,0,0,0,0,0,1,0,0},
+                                      {0,0,1,0,0,0,0,0,0,0,1,0,0},
+                                      {0,0,1,0,0,0,0,0,0,0,1,0,0},
+                                      {0,0,1,1,0,0,0,0,0,0,1,0,0},
+                                      {0,0,1,1,1,0,0,0,0,0,1,0,0},
+                                      {0,0,1,1,1,0,0,0,0,1,0,0,0},
+                                      {0,0,1,1,0,0,0,0,1,0,0,0,0},
+                                      {0,0,1,0,0,0,0,1,0,0,0,0,0},}; 
   
   for (int i = 0; i < totalWidth; ++i)
     for (int j = 0; j < totalWidth; ++j)
       if (detection_indication[i][j] == 1) {
         image[x + i][y + j][0] = 255;
         image[x + i][y + j][1] = 0;
-        image[x + i][y + j][2] = 255;
+        image[x + i][y + j][2] = 0;
       }
 
   // do option for getting the silhoutte of the cell 
@@ -161,14 +162,14 @@ void draw_detection_indication(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CH
   //     if (i == 0 || i == totalWidth - 1 || j == 0 || j == totalWidth - 1) {
   //       image[x + i][y + j][0] = 255;
   //       image[x + i][y + j][1] = 0;
-  //       image[x + i][y + j][2] = 255;
+  //       image[x + i][y + j][2] = 0;
   //     }
 }
 
 void remove_cell(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int x, int y, int capAreaWidth) {
   // TODO: maybe only color white parts of the image; there's no need to color black pixels black
-  for (int i = 1; i < capAreaWidth; ++i)
-    for (int j = 1; j < capAreaWidth; ++j) {
+  for (int i = 1; i <= capAreaWidth; ++i)
+    for (int j = 1; j <= capAreaWidth; ++j) {
       image[x + i][y + j][0] = 0;
       image[x + i][y + j][1] = 0;
       image[x + i][y + j][2] = 0;
@@ -177,7 +178,7 @@ void remove_cell(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int x
 
 void detect_cells(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char out_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int* cellCount, bool printCoords) {
   // TODO: we assume that the erosion erases the border pixels of the image
-  int frameWidth = 1;
+  int frameWidth = 1 * 2;
   int capAreaWidth = 12; 
   // TODO: Maybe change the capture area to be 2d array
 
@@ -191,7 +192,7 @@ void detect_cells(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], u
           ++*cellCount;
           if (printCoords)
             // TODO: modify this to be the center
-            printf("cell #%d: (%d, %d)\n", *cellCount, x, y);
+            printf("\tcell #%d: (%d, %d)\n", *cellCount, x, y);
         }
 }
 
@@ -216,10 +217,78 @@ int main(int argc, char** argv) {
   // Step 4: Erode the binary image
   printf("Cell detection results:\n");
 
-  while(erode_image(image0_ptr, image1_ptr)) {
+
+
+
+
+
+
+
+
+
+
+
+  // erode_image(intermedia_image0, intermedia_image1);
+  // erode_image(intermedia_image1, intermedia_image0);
+  // erode_image(intermedia_image0, intermedia_image1);
+  // erode_image(intermedia_image1, intermedia_image0);
+  // erode_image(intermedia_image0, intermedia_image1);
+  // erode_image(intermedia_image1, intermedia_image0);
+  // erode_image(intermedia_image0, intermedia_image1);
+  // erode_image(intermedia_image1, intermedia_image0);
+  // erode_image(intermedia_image0, intermedia_image1);
+  // erode_image(intermedia_image1, intermedia_image0);
+  // printf("%d", erode_image(intermedia_image0, intermedia_image1));
+
+  // detect_cells(intermedia_image1, input_image, &cellCount, false);
+
+  // write_bitmap(intermedia_image1, argv[2]);
+
+
+  // NOW WITH POINTERS - IT now doesn't work
+  // erode_image(image0_ptr, image1_ptr);
+  // erode_image(image1_ptr, image0_ptr);
+  // printf("%d", erode_image(image0_ptr, image1_ptr));
+
+  // tmp_ptr = image0_ptr;
+  // image0_ptr = image1_ptr;
+  // image1_ptr = tmp_ptr;
+
+
+
+  // detect_cells(image1_ptr, input_image, &cellCount, false);
+
+  // write_bitmap(image1_ptr, argv[2]);
+
+  // return 0; 
+
+
+
+
+
+
+
+
+  // TODO: MAKE THE DETECITON FRAME TRUE 
+  // TODO: MAKE ERODE RETURN TRUE!
+  // TODO: MAKE ERODE NOT DO WEIRD STUFF
+
+
+
+
+
+
+
+  while(1) {
+    erode_image(image0_ptr, image1_ptr);
+
     // print steps for debugging
-    snprintf(buffer, sizeof buffer, "step_%d_%s", step++, argv[2]);
-    write_bitmap(image1_ptr, buffer);
+    if (debug) {
+      memcpy(output_file_name, argv[2] + 2, strlen(argv[2]));
+      snprintf(buffer, sizeof buffer, "./step_%d_%s", step++, output_file_name);
+      write_bitmap(image1_ptr, buffer);
+    }
+    step++;
 
     // Step 5 and 6: Detect cells and generate output image
     detect_cells(image1_ptr, input_image, &cellCount, true);
@@ -228,6 +297,9 @@ int main(int argc, char** argv) {
     tmp_ptr = image0_ptr;
     image0_ptr = image1_ptr;
     image1_ptr= tmp_ptr;
+
+    if (step > 25)
+      break;
   }
 
   printf("\tA total of %d %s detected.\n", cellCount, cellCount == 1 ? "cell was" : "cells were");
