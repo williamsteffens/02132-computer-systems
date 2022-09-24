@@ -8,8 +8,21 @@ Cell counting program - Ass1
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <time.h>
 
 #include "cbmp.h"
+
+
+// start = clock();
+// /* The code that has to be measured. */
+// end = clock();
+// cpu_time_used = end - start;
+// printf("Total time: %f ms\n", cpu_time_used * 1000.0 /
+// CLOCKS_PER_SEC);
+
+// TODO: add the above as needed, and look into macros in C
+
+
 
 // TODO: add morph enum for erode and dilation here:)
 // TODO: add enum for drawing:)
