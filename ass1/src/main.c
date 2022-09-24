@@ -172,8 +172,7 @@ void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out
           remove_cell(binary, x, y, capAreaWidth);
           ++*cellCount;
           if (printCoords)
-            // TODO: modify this to be the center
-            printf("\tcell #%d: (%d, %d)\n", *cellCount, x, y);
+            printf("\tcell #%d: (%d, %d)\n", *cellCount, x + capAreaWidth / 2, y + capAreaWidth / 2);
         }
 }
 
