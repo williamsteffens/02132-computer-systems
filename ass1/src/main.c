@@ -106,11 +106,24 @@ bool erode(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bin
 }
 
 bool detection_frame_clear(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int x, int y, int totalWidth) {
-  for (int i = 0; i < totalWidth; ++i)
-    for (int j = 0; j < totalWidth; ++j)
-      if (i == 0 || i == totalWidth - 1 || j == 0 || j == totalWidth - 1)
+  for (int i = 0; i < totalWidth; ++i) {
+    if (binary[x + i][y] == 1)
+      return false;
+    if (binary[x + i][y + totalWidth - 1] == 1)
+      return false; 
+    if (i == 0 || i == totalWidth - 1)
+      for (int j = 0; j < totalWidth; ++j)
         if (binary[x + i][y + j] == 1)
-          return false;
+          return false; 
+  }
+  
+  // inefficient square frame
+  //
+  // for (int i = 0; i < totalWidth; ++i)
+  //   for (int j = 0; j < totalWidth; ++j)
+  //     if (i == 0 || i == totalWidth - 1 || j == 0 || j == totalWidth - 1)
+  //       if (binary[x + i][y + j] == 1)
+  //         return false;
 
   return true; 
 }
@@ -125,19 +138,19 @@ bool cell_detected(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int x, int y, in
 }
 
 void draw_detection_indication(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int x, int y, int totalWidth) {
-  int detection_indication[13][13] = {{0,0,1,0,0,0,0,0,0,0,0,0,0},
-                                      {0,0,1,1,0,0,0,1,1,1,0,0,0},
-                                      {0,0,1,1,1,0,0,0,0,1,0,0,0},
-                                      {0,0,1,1,1,0,0,0,0,1,0,0,0},
-                                      {0,0,1,1,0,0,0,0,0,1,0,0,0},
-                                      {0,0,1,0,0,0,0,0,0,1,0,0,0},
-                                      {0,0,1,1,1,1,1,1,0,1,0,0,0},
-                                      {0,0,1,0,0,0,0,1,0,1,0,0,0},
-                                      {0,0,1,1,0,0,0,1,0,1,0,0,0},
-                                      {0,0,1,1,1,0,0,0,0,1,0,0,0},
-                                      {0,0,1,1,1,0,0,0,0,1,0,0,0},
-                                      {0,0,1,1,0,0,0,1,1,1,0,0,0},
-                                      {0,0,1,0,0,0,0,0,0,0,0,0,0},}; 
+  int detection_indication[14][14] = {{0,0,0,1,0,0,0,0,0,0,0,0,0,0},
+                                      {0,0,0,1,1,0,0,0,1,1,1,0,0,0},
+                                      {0,0,0,1,1,1,0,0,0,0,1,0,0,0},
+                                      {0,0,0,1,1,1,0,0,0,0,1,0,0,0},
+                                      {0,0,0,1,1,0,0,0,0,0,1,0,0,0},
+                                      {0,0,0,1,0,0,0,0,0,0,1,0,0,0},
+                                      {0,0,0,1,1,1,1,1,1,0,1,0,0,0},
+                                      {0,0,0,1,0,0,0,0,1,0,1,0,0,0},
+                                      {0,0,0,1,1,0,0,0,1,0,1,0,0,0},
+                                      {0,0,0,1,1,1,0,0,0,0,1,0,0,0},
+                                      {0,0,0,1,1,1,0,0,0,0,1,0,0,0},
+                                      {0,0,0,1,1,0,0,0,1,1,1,0,0,0},
+                                      {0,0,0,1,0,0,0,0,0,0,0,0,0,0},}; 
   
   for (int i = 0; i < totalWidth; ++i)
     for (int j = 0; j < totalWidth; ++j)
@@ -172,16 +185,17 @@ void remove_cell(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int x, int y, int 
 
 void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int* cellCount, bool printCoords) {
   // TODO: we assume that the erosion erases the border pixels of the image
-  int frameWidth = 1 * 2;
+  int frameWidth = 1;
   int capAreaWidth = 12; 
   // TODO: Maybe change the capture area to be 2d array
 
-  for (int x = 0; x < BMP_WIDTH - capAreaWidth; ++x)
-    for (int y = 0; y < BMP_WIDTH - capAreaWidth; ++y)
+  // TODO: Is it better to pull out the conditions of the for loop? 
+  for (int x = 0; x < BMP_WIDTH - (capAreaWidth + frameWidth); ++x)
+    for (int y = 0; y < BMP_WIDTH - (capAreaWidth + frameWidth); ++y)
       
-      if (detection_frame_clear(binary, x, y, capAreaWidth + frameWidth))
+      if (detection_frame_clear(binary, x, y, capAreaWidth + frameWidth * 2))
         if (cell_detected(binary, x, y, capAreaWidth)) {
-          draw_detection_indication(out_image, x, y, capAreaWidth + frameWidth);
+          draw_detection_indication(out_image, x, y, capAreaWidth + frameWidth * 2);
           remove_cell(binary, x, y, capAreaWidth);
           ++*cellCount;
           if (printCoords)
