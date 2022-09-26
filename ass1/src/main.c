@@ -13,6 +13,7 @@ Cell counting program - Ass1
 #include "cbmp.h"
 
 
+
 // start = clock();
 // /* The code that has to be measured. */
 // end = clock();
@@ -30,6 +31,7 @@ Cell counting program - Ass1
 unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
 #if DEBUG
   unsigned char debug_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
+  char c;
 #endif
 unsigned char intermedia_image0[BMP_WIDTH][BMP_HEIGTH];
 unsigned char intermedia_image1[BMP_WIDTH][BMP_HEIGTH];
@@ -40,6 +42,12 @@ unsigned char (*tmp_ptr)[BMP_HEIGTH];
 int step = 0;
 int cellCount = 0; 
 char buffer[50];
+
+int x_lower = 0;
+int x_upper = BMP_WIDTH;
+int y_lower = 0;
+int y_upper = BMP_HEIGTH; 
+
 
 
 bool is_on_edge(int x, int y, int width, int height) {
@@ -52,15 +60,75 @@ bool is_on_edge(int x, int y, int width, int height) {
     return false; 
 }
 
-void create_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char binary[BMP_WIDTH][BMP_HEIGTH]) {
-  int th = 90;
-  
-  for (int x = 0; x < BMP_WIDTH; ++x) {
+void morpher_I_barely_know_her();
+
+void create_otsu_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char binary[BMP_WIDTH][BMP_HEIGTH]) {
+  unsigned histogram[256] = {0};
+  unsigned char grayVal;
+  int max_intensity = 256;
+  int threshold = 0;
+  int N = BMP_WIDTH * BMP_HEIGTH;
+  int omega_b, omega_f = 0;
+  float mu_b, mu_f, mu_diff, sum, sumB, inter_var, var_max = 0.0f;
+
+  for (int x = 0; x < BMP_WIDTH; ++x)
     for (int y = 0; y < BMP_HEIGTH; ++y) {
-      int avg = (in_image[x][y][0] + in_image[x][y][1] + in_image[x][y][2]);
-      binary[x][y] = avg > th * 3 ? 1 : 0;
+      grayVal = (unsigned char) (0.299 * in_image[x][y][0] + 0.587 * in_image[x][y][1] + 0.114 * in_image[x][y][2]);
+      //grayVal = (in_image[x][y][0] + in_image[x][y][1] + in_image[x][y][2]) / 3;
+      ++histogram[grayVal];
+    }
+
+  // for (int i = 0; i < 256; ++i) {
+  //   sum += histogram[i];
+  //   //if (histogram[i] > 255)
+  //     //printf("%d\n", histogram[i]);
+  // }
+  // printf("\n%d\n", N);
+  // printf("%f\n", sum);
+
+  // TODO: DO A MACRO FOR SETTING OVERRIDDEN THRESHOLD FOR TESTING?
+  for (int i = 0; i < max_intensity; ++i)
+    sum += i * ((int)histogram[i]);
+
+
+  // TODO: shouldn't this go from 1? 0 is always var of zero?
+  for (int t = 0; t < max_intensity; ++t) {
+    // update omega values
+    omega_b += histogram[t];
+    if (omega_b == 0)
+      continue;
+
+    omega_f = N - omega_b;
+    if (omega_f == 0)
+      break;
+
+    // update mu values
+    sumB += (float) (t * ((int)histogram[t]));
+    mu_b = sumB / omega_b;
+    mu_f = (sum - sumB) / omega_f;
+
+    // update inter-class var
+    mu_diff = mu_b - mu_f;
+    inter_var = (float) omega_b * (float) omega_f * (mu_diff * mu_diff);
+
+    // update threshold
+    if (inter_var > var_max) {
+      threshold = t;
+      var_max = inter_var;
     }
   }
+
+  for (int x = 0; x < BMP_WIDTH; ++x)
+    for (int y = 0; y < BMP_HEIGTH; ++y) {
+      grayVal = (unsigned char) (0.299 * in_image[x][y][0] + 0.587 * in_image[x][y][1] + 0.114 * in_image[x][y][2]);
+      //grayVal = (in_image[x][y][0] + in_image[x][y][1] + in_image[x][y][2]) / 3;
+      binary[x][y] = grayVal > threshold - 20 ? 1 : 0;
+    }
+
+  #if DEBUG
+    printf("t: %d\n", threshold);
+  #endif
+
 }
 
 bool erode(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_binary[BMP_WIDTH][BMP_HEIGTH]) {
@@ -134,10 +202,10 @@ bool cell_detected(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int x, int y, in
       if (binary[x + i][y + j] == 1)
         return true;
 
-  return false; 
+  return false;
 }
 
-void draw_detection_indication(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int x, int y, int totalWidth) {
+void draw_detection_indication(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int x, int y, int offset) {
   int detection_indication[14][14] = {{0,0,0,1,0,0,0,0,0,0,0,0,0,0},
                                       {0,0,0,1,1,0,0,0,1,1,1,0,0,0},
                                       {0,0,0,1,1,1,0,0,0,0,1,0,0,0},
@@ -152,12 +220,12 @@ void draw_detection_indication(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CH
                                       {0,0,0,1,1,0,0,0,1,1,1,0,0,0},
                                       {0,0,0,1,0,0,0,0,0,0,0,0,0,0},}; 
   
-  for (int i = 0; i < totalWidth; ++i)
-    for (int j = 0; j < totalWidth; ++j)
+  for (int i = 0; i < 14; ++i)
+    for (int j = 0; j < 14; ++j)
       if (detection_indication[i][j] == 1) {
-        image[x + i][y + j][0] = 255;
-        image[x + i][y + j][1] = 0;
-        image[x + i][y + j][2] = 0;
+        image[x + offset + i][y + offset + j][0] = 255;
+        image[x + offset + i][y + offset + j][1] = 0;
+        image[x + offset + i][y + offset + j][2] = 0;
       }
 
   // do option for getting the silhoutte of the cell 
@@ -174,6 +242,7 @@ void draw_detection_indication(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CH
   //       image[x + i][y + j][1] = 0;
   //       image[x + i][y + j][2] = 0;
   //     }
+
 }
 
 void remove_cell(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int x, int y, int capAreaWidth) {
@@ -181,26 +250,29 @@ void remove_cell(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int x, int y, int 
   for (int i = 1; i <= capAreaWidth; ++i)
     for (int j = 1; j <= capAreaWidth; ++j)
       binary[x + i][y + j] = 0;
+
 }
 
 void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int* cellCount, bool printCoords) {
   // TODO: we assume that the erosion erases the border pixels of the image
   int frameWidth = 1;
-  int capAreaWidth = 12; 
+  int capAreaWidth = 15; 
   // TODO: Maybe change the capture area to be 2d array
 
   // TODO: Is it better to pull out the conditions of the for loop? 
   for (int x = 0; x < BMP_WIDTH - (capAreaWidth + frameWidth); ++x)
     for (int y = 0; y < BMP_WIDTH - (capAreaWidth + frameWidth); ++y)
       
-      if (detection_frame_clear(binary, x, y, capAreaWidth + frameWidth * 2))
+      if (detection_frame_clear(binary, x, y, capAreaWidth + (frameWidth << 1)))
         if (cell_detected(binary, x, y, capAreaWidth)) {
-          draw_detection_indication(out_image, x, y, capAreaWidth + frameWidth * 2);
+          // TODO: fix your offset of the drawing, is >> 2 okay? 
+          draw_detection_indication(out_image, x, y, capAreaWidth >> 2);
           remove_cell(binary, x, y, capAreaWidth);
           ++*cellCount;
           if (printCoords)
-            printf("\tcell #%d: (%d, %d)\n", *cellCount, x + capAreaWidth / 2, y + capAreaWidth / 2);
+            printf("\tcell #%d: (%d, %d)\n", *cellCount, x + capAreaWidth >> 1, y + capAreaWidth >> 1);
         }
+
 }
 
 void binary_to_BMP(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char BMP[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS]) {
@@ -214,6 +286,7 @@ void binary_to_BMP(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char BM
       }
     }
   }
+
 }
 
 
@@ -231,7 +304,8 @@ int main(int argc, char** argv) {
   read_bitmap(argv[1], input_image);
   
   // Step 2 and 3: Convert from RGB to GrayScale and apply the binary threshold to create a binary image
-  create_binary(input_image, image0_ptr);
+  // OpStep 1: Calculate threshold using Otsu's method.
+  create_otsu_binary(input_image, image0_ptr);
 
   // TODO: Why erode the image first? Shouldn't we detect the cells we can and then erode? or are we trying to get rid of noise? 
   // Step 4: Erode the binary image
@@ -264,6 +338,7 @@ int main(int argc, char** argv) {
   write_bitmap(input_image, argv[2]);
 
   printf("Done!\n");
+
   return 0;
 }
 
