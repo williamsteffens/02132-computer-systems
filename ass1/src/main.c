@@ -114,17 +114,23 @@ void create_otsu_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNE
 }
 
 bool erode(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_binary[BMP_WIDTH][BMP_HEIGTH]) {
-  unsigned char size = 9; 
+  unsigned char size = 5; 
   unsigned char halfSize = size >> 1;
-  unsigned char struct_elem[9][9] = {{0,0,0,0,1,0,0,0,0},
-                                     {0,0,0,1,1,1,0,0,0},
-                                     {0,0,1,1,1,1,1,0,0},
-                                     {0,1,1,1,1,1,1,1,0},
-                                     {1,1,1,1,1,1,1,1,1},
-                                     {0,1,1,1,1,1,1,1,0},
-                                     {0,0,1,1,1,1,1,0,0},
-                                     {0,0,0,1,1,1,0,0,0},
-                                     {0,0,0,0,1,0,0,0,0}};
+  unsigned char struct_elem[5][5] = {{0,1,1,1,0},
+                                     {1,1,1,1,1},
+                                     {1,1,1,1,1},
+                                     {1,1,1,1,1},
+                                     {0,1,1,1,0},};
+  
+  // unsigned char size = 7; 
+  // unsigned char halfSize = size >> 1;
+  // unsigned char struct_elem[7][7] = {{0,0,1,1,1,0,0},
+  //                                    {0,1,1,1,1,1,0},
+  //                                    {1,1,1,1,1,1,1},
+  //                                    {1,1,1,1,1,1,1},
+  //                                    {1,1,1,1,1,1,1},
+  //                                    {0,1,1,1,1,1,0},
+  //                                    {0,0,1,1,1,0,0}};
 
   bool wasEroded = false;
   bool erodePixel = false;
@@ -176,15 +182,23 @@ bool erode(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bin
 }
 
 bool dilate(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_binary[BMP_WIDTH][BMP_HEIGTH]) {
-  unsigned char size = 7; 
+  unsigned char size = 5; 
   unsigned char halfSize = size >> 1;
-  unsigned char struct_elem[7][7] = {{0,0,1,1,1,0,0},
-                                     {0,1,1,1,1,1,0},
-                                     {1,1,1,1,1,1,1},
-                                     {1,1,1,1,1,1,1},
-                                     {1,1,1,1,1,1,1},
-                                     {0,1,1,1,1,1,0},
-                                     {0,0,1,1,1,0,0}};
+  unsigned char struct_elem[5][5] = {{0,1,1,1,0},
+                                     {1,1,1,1,1},
+                                     {1,1,1,1,1},
+                                     {1,1,1,1,1},
+                                     {0,1,1,1,0},};
+  
+  // unsigned char size = 7; 
+  // unsigned char halfSize = size >> 1;
+  // unsigned char struct_elem[7][7] = {{0,0,1,1,1,0,0},
+  //                                    {0,1,1,1,1,1,0},
+  //                                    {1,1,1,1,1,1,1},
+  //                                    {1,1,1,1,1,1,1},
+  //                                    {1,1,1,1,1,1,1},
+  //                                    {0,1,1,1,1,1,0},
+  //                                    {0,0,1,1,1,0,0}};
   
   bool dilatePixel = false;
   bool wasDilated = false; 
@@ -422,16 +436,23 @@ int main(int argc, char** argv) {
       write_bitmap(debug_image, buffer);
   #endif
 
+  // Output closing step for debugging
+  #if DEBUG
+      snprintf(buffer, sizeof buffer, "./debug/step_%dc.bmp", step++);
+      binary_to_BMP(image0_ptr, debug_image);
+      write_bitmap(debug_image, buffer);
+  #endif
+
   while(morpher_I_barely_know_her(image0_ptr, image1_ptr, opening)) {
     // Output morph steps for debugging
     #if DEBUG
-      snprintf(buffer, sizeof buffer, "./debug/step_%de.bmp", step++);
-      binary_to_BMP(image0_ptr, debug_image);
+      snprintf(buffer, sizeof buffer, "./debug/step_%dm.bmp", step++);
+      binary_to_BMP(image1_ptr, debug_image);
       write_bitmap(debug_image, buffer);
     #endif
 
     // Step 5 and 6: Detect cells and generate output image
-    detect_cells(image0_ptr, input_image, &cellCount, false);
+    detect_cells(image1_ptr, input_image, &cellCount, false);
 
     // Swap ptr for the intermedia images
     tmp_ptr = image0_ptr;
