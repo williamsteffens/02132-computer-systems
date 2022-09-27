@@ -108,21 +108,26 @@ void create_otsu_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNE
 }
 
 bool erode(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_binary[BMP_WIDTH][BMP_HEIGTH]) {
-  unsigned char struct_elem[5][5] = {{0,0,1,0,0},
-                                     {0,1,1,1,0},
-                                     {1,1,1,1,1},
-                                     {0,1,1,1,0},
-                                     {0,0,1,0,0},};
+  unsigned char size = 9; 
+  unsigned char halfSize = size >> 1;
+  unsigned char struct_elem[9][9] = {{0,0,0,0,1,0,0,0,0},
+                                     {0,0,0,1,1,1,0,0,0},
+                                     {0,0,1,1,1,1,1,0,0},
+                                     {0,1,1,1,1,1,1,1,0},
+                                     {1,1,1,1,1,1,1,1,1},
+                                     {0,1,1,1,1,1,1,1,0},
+                                     {0,0,1,1,1,1,1,0,0},
+                                     {0,0,0,1,1,1,0,0,0},
+                                     {0,0,0,0,1,0,0,0,0}};
+
   bool wasEroded = false;
   bool erodePixel = false;
 
-  unsigned char size = 5; 
-  unsigned char halfSize = size >> 1;
 
   for (int x = 0; x < BMP_WIDTH; ++x) {
     for (int y = 0; y < BMP_HEIGTH; ++y) {
 
-      // Should only erode if the pixel is white
+      // Should only erode if the pixel is white; skip black
       if (in_binary[x][y] == 0) {
         out_binary[x][y] = 0;
         continue;
@@ -165,7 +170,64 @@ bool erode(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bin
 }
 
 bool dilate(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_binary[BMP_WIDTH][BMP_HEIGTH]) {
+  unsigned char size = 7; 
+  unsigned char halfSize = size >> 1;
+  unsigned char struct_elem[7][7] = {{0,0,1,1,1,0,0},
+                                     {0,1,1,1,1,1,0},
+                                     {1,1,1,1,1,1,1},
+                                     {1,1,1,1,1,1,1},
+                                     {1,1,1,1,1,1,1},
+                                     {0,1,1,1,1,1,0},
+                                     {0,0,1,1,1,0,0}};
+  
+  bool dilatePixel = false;
+  bool wasDilated = false; 
+  
+  
+  
+  for (int x = 0; x < BMP_WIDTH; ++x) {
+    for (int y = 0; y < BMP_HEIGTH; ++y) {
 
+      // Should only dialte if the pixel is black; skip white
+      if (in_binary[x][y] == 1) {
+        out_binary[x][y] = 1;
+        continue;
+      }
+
+      // Erode edge pixels for the detection frame to work; yes even in dilation
+      if (x == 0 || y == 0 || x == BMP_WIDTH - 1 || y == BMP_HEIGTH - 1) {
+        out_binary[x][y] = 0;
+        continue;
+      }
+
+      // Iterate over the struct_elem
+      dilatePixel = false; 
+      for (int i = 0; i < size; ++i) {
+        for (int j = 0; j < size; ++j) {
+          // Should the structing be out of bounds, assume 0 by skipping (continue) for the part that overflows
+          if (x + i - halfSize < 0 || x + i - halfSize >= BMP_WIDTH || y + j - halfSize < 0 || y + j - halfSize >= BMP_HEIGTH)
+            continue;
+
+          if (struct_elem[i][j] && in_binary[x + i - halfSize][y + j - halfSize]) {
+            dilatePixel = true;
+            // TODO: consider using goto here, instead of dbl break
+            break; 
+          }
+        }
+        if (dilatePixel)
+          break;
+      }
+
+      if (dilatePixel) {
+        out_binary[x][y] = 1;
+        wasDilated = true;
+      } else {
+        out_binary[x][y] = 0;
+      }
+    }
+  }
+
+  return wasDilated;
 }
 
 bool morpher_I_barely_know_her(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_binary[BMP_WIDTH][BMP_HEIGTH], int op) {
@@ -256,7 +318,7 @@ void remove_cell(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int x, int y, int 
   for (int i = 1; i <= capAreaWidth; ++i)
     for (int j = 1; j <= capAreaWidth; ++j)
       // Only color black if white
-      if (binary[x + i][y + j] == 1)
+      //if (binary[x + i][y + j] == 1)
         binary[x + i][y + j] = 0;
 
 }
@@ -305,11 +367,18 @@ void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out
   void binary_to_BMP(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char BMP[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS]) {
     for (int x = 0; x < BMP_WIDTH; ++x)
       for (int y = 0; y < BMP_HEIGTH; ++y)
-        for (int c = 0; c < BMP_CHANNELS; ++c)
-          if (binary[x][y] == 1)
-            BMP[x][y][c] = 255;
-          else 
-            BMP[x][y][c] = 0;
+        //if (binary[x][y] != 2) {
+          for (int c = 0; c < BMP_CHANNELS; ++c)
+            if (binary[x][y] == 1)
+              BMP[x][y][c] = 255;
+            else 
+              BMP[x][y][c] = 0;
+        //}
+        //else {
+          //BMP[x][y][0] = 255;
+          //BMP[x][y][1] = 0;
+          //BMP[x][y][2] = 0;
+        //}
 
   }
 #endif
@@ -341,7 +410,7 @@ int main(int argc, char** argv) {
       write_bitmap(debug_image, buffer);
   #endif
 
-  while(erode(image0_ptr, image1_ptr)) {
+  while(dilate(image0_ptr, image1_ptr)) {
     // Output morph steps for debugging
     #if DEBUG
       snprintf(buffer, sizeof buffer, "./debug/step_%de.bmp", step++);
