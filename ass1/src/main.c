@@ -422,8 +422,7 @@ int main(int argc, char** argv) {
       write_bitmap(debug_image, buffer);
   #endif
 
-  while(morpher_I_barely_know_her(image0_ptr, image1_ptr, erosion)) {
-    morpher_I_barely_know_her(image1_ptr, image0_ptr, dilation);
+  while(morpher_I_barely_know_her(image0_ptr, image1_ptr, opening)) {
     // Output morph steps for debugging
     #if DEBUG
       snprintf(buffer, sizeof buffer, "./debug/step_%de.bmp", step++);
