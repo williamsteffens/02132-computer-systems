@@ -23,6 +23,12 @@ Cell counting program - Ass1
 
 // TODO: add the above as needed, and look into macros in C
 
+typedef enum {
+  erosion,
+  dilation,
+  opening,
+  closing
+} Morph_OP;
 
 // TODO: add morph enum for erode and dilation, or opening / closing here:)
 // TODO: add enum for drawing:)
@@ -230,35 +236,41 @@ bool dilate(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bi
   return wasDilated;
 }
 
-bool morpher_I_barely_know_her(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_binary[BMP_WIDTH][BMP_HEIGTH], int op) {
+bool morpher_I_barely_know_her(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_binary[BMP_WIDTH][BMP_HEIGTH], Morph_OP op) {
   bool wasEroded;
   bool wasDilated;
 
-/*
-  switch (true)
+  switch (op)
   {
-  case 1:
-    return erode();
+  case erosion:
+    return erode(in_binary, out_binary);
     break;
 
-  case 2: 
-    return dilate();
+  case dilation: 
+    return dilate(in_binary, out_binary);
     break; 
 
-  case 3:
-    return dilate() && erode(); 
+  case opening:
+    wasEroded = erode(in_binary, out_binary);
+    wasDilated = dilate(out_binary, in_binary);
+    // Make the out_binary point to the in_binary image
+    out_binary = in_binary;
+    return wasEroded || wasDilated;
     break;
 
-  case 4:
-    return erode() && dilate(); 
+  case closing:
+    wasDilated = dilate(in_binary, out_binary);
+    wasEroded = erode(out_binary, in_binary);
+    // Make the out_binary point to the in_binary image
+    out_binary = in_binary;
+    return wasDilated || wasEroded;
     break; 
 
   default:
-    // throw err? 
+    // Do something
+    // Would prob be good practice
     break;
   }
-*/
-
 };
 
 bool detection_frame_clear(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int x, int y, int totalWidth) {
@@ -410,16 +422,17 @@ int main(int argc, char** argv) {
       write_bitmap(debug_image, buffer);
   #endif
 
-  while(dilate(image0_ptr, image1_ptr)) {
+  while(morpher_I_barely_know_her(image0_ptr, image1_ptr, erosion)) {
+    morpher_I_barely_know_her(image1_ptr, image0_ptr, dilation);
     // Output morph steps for debugging
     #if DEBUG
       snprintf(buffer, sizeof buffer, "./debug/step_%de.bmp", step++);
-      binary_to_BMP(image1_ptr, debug_image);
+      binary_to_BMP(image0_ptr, debug_image);
       write_bitmap(debug_image, buffer);
     #endif
 
     // Step 5 and 6: Detect cells and generate output image
-    detect_cells(image1_ptr, input_image, &cellCount, false);
+    detect_cells(image0_ptr, input_image, &cellCount, false);
 
     // Swap ptr for the intermedia images
     tmp_ptr = image0_ptr;
