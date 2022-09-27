@@ -24,8 +24,7 @@ Cell counting program - Ass1
 // TODO: add the above as needed, and look into macros in C
 
 
-
-// TODO: add morph enum for erode and dilation here:)
+// TODO: add morph enum for erode and dilation, or opening / closing here:)
 // TODO: add enum for drawing:)
 
 unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
@@ -50,18 +49,6 @@ int y_upper = BMP_HEIGTH;
 
 
 
-bool is_on_edge(int x, int y, int width, int height) {
-  bool max = x >= width - 1 || y >= height - 1;
-  bool min = x == 0 || y == 0;
-
-  if (max || min) 
-    return true;
-  else 
-    return false; 
-}
-
-void morpher_I_barely_know_her();
-
 void create_otsu_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char binary[BMP_WIDTH][BMP_HEIGTH]) {
   unsigned histogram[256] = {0};
   unsigned char grayVal;
@@ -78,20 +65,9 @@ void create_otsu_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNE
       ++histogram[grayVal];
     }
 
-  // for (int i = 0; i < 256; ++i) {
-  //   sum += histogram[i];
-  //   //if (histogram[i] > 255)
-  //     //printf("%d\n", histogram[i]);
-  // }
-  // printf("\n%d\n", N);
-  // printf("%f\n", sum);
-
-  // TODO: DO A MACRO FOR SETTING OVERRIDDEN THRESHOLD FOR TESTING?
   for (int i = 0; i < max_intensity; ++i)
     sum += i * ((int)histogram[i]);
 
-
-  // TODO: shouldn't this go from 1? 0 is always var of zero?
   for (int t = 0; t < max_intensity; ++t) {
     // update omega values
     omega_b += histogram[t];
@@ -132,46 +108,96 @@ void create_otsu_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNE
 }
 
 bool erode(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_binary[BMP_WIDTH][BMP_HEIGTH]) {
-  unsigned char structing_element[3][3] = {{0,1,0},{1,1,1},{0,1,0}};
+  unsigned char struct_elem[5][5] = {{0,0,1,0,0},
+                                     {0,1,1,1,0},
+                                     {1,1,1,1,1},
+                                     {0,1,1,1,0},
+                                     {0,0,1,0,0},};
   bool wasEroded = false;
-  bool erodePixel;
+  bool erodePixel = false;
+
+  unsigned char size = 5; 
+  unsigned char halfSize = size >> 1;
 
   for (int x = 0; x < BMP_WIDTH; ++x) {
     for (int y = 0; y < BMP_HEIGTH; ++y) {
 
-      // TODO: Should only erode if the pixel is white, change to center for other structing elements
+      // Should only erode if the pixel is white
       if (in_binary[x][y] == 0) {
-        out_binary[x][y] = in_binary[x][y];
+        out_binary[x][y] = 0;
         continue;
       }
 
-      erodePixel = false;
-      if (is_on_edge(x, y, BMP_WIDTH, BMP_HEIGTH)) {
-          erodePixel = true;
-      } else {
-        for (int i = 0; i < 3; ++i) {
-          for (int j = 0; j < 3; ++j)
-            if (structing_element[i][j] == 1 && in_binary[x + i - 1][y + j - 1] == 0) {
-              erodePixel = true;
-              // TODO: consider using <goto> here so you don't need to break twice
-              break;
-            }
-          if (erodePixel)
-            break;
+      // Erode edge pixels
+      if (x == 0 || y == 0 || x == BMP_WIDTH - 1 || y == BMP_HEIGTH - 1) {
+        out_binary[x][y] = 0;
+        continue;
+      }
+
+      // Iterate over the struct_elem
+      erodePixel = false; 
+      for (int i = 0; i < size; ++i) {
+        for (int j = 0; j < size; ++j) {
+          // Should the structing be out of bounds, assume 1 by skipping (continue) for the part that overflows
+          if (x + i - halfSize < 0 || x + i - halfSize >= BMP_WIDTH || y + j - halfSize < 0 || y + j - halfSize >= BMP_HEIGTH)
+            continue;
+
+          if (struct_elem[i][j] && !(in_binary[x + i - halfSize][y + j - halfSize])) {
+            erodePixel = true;
+            // TODO: consider using goto here, instead of dbl break
+            break; 
+          }
         }
+        if (erodePixel)
+          break;
       }
 
       if (erodePixel) {
         out_binary[x][y] = 0;
         wasEroded = true;
       } else {
-        out_binary[x][y] = in_binary[x][y];
+        out_binary[x][y] = 1;
       }
     }
   }
 
   return wasEroded; 
 }
+
+bool dilate(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_binary[BMP_WIDTH][BMP_HEIGTH]) {
+
+}
+
+bool morpher_I_barely_know_her(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_binary[BMP_WIDTH][BMP_HEIGTH], int op) {
+  bool wasEroded;
+  bool wasDilated;
+
+/*
+  switch (true)
+  {
+  case 1:
+    return erode();
+    break;
+
+  case 2: 
+    return dilate();
+    break; 
+
+  case 3:
+    return dilate() && erode(); 
+    break;
+
+  case 4:
+    return erode() && dilate(); 
+    break; 
+
+  default:
+    // throw err? 
+    break;
+  }
+*/
+
+};
 
 bool detection_frame_clear(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int x, int y, int totalWidth) {
   for (int i = 0; i < totalWidth; ++i) {
@@ -182,16 +208,8 @@ bool detection_frame_clear(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int x, i
     if (i == 0 || i == totalWidth - 1)
       for (int j = 0; j < totalWidth; ++j)
         if (binary[x + i][y + j] == 1)
-          return false; 
+          return false;
   }
-  
-  // inefficient square frame
-  //
-  // for (int i = 0; i < totalWidth; ++i)
-  //   for (int j = 0; j < totalWidth; ++j)
-  //     if (i == 0 || i == totalWidth - 1 || j == 0 || j == totalWidth - 1)
-  //       if (binary[x + i][y + j] == 1)
-  //         return false;
 
   return true; 
 }
@@ -206,89 +224,95 @@ bool cell_detected(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int x, int y, in
 }
 
 void draw_detection_indication(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int x, int y, int offset) {
-  int detection_indication[14][14] = {{0,0,0,1,0,0,0,0,0,0,0,0,0,0},
-                                      {0,0,0,1,1,0,0,0,1,1,1,0,0,0},
-                                      {0,0,0,1,1,1,0,0,0,0,1,0,0,0},
-                                      {0,0,0,1,1,1,0,0,0,0,1,0,0,0},
-                                      {0,0,0,1,1,0,0,0,0,0,1,0,0,0},
-                                      {0,0,0,1,0,0,0,0,0,0,1,0,0,0},
-                                      {0,0,0,1,1,1,1,1,1,0,1,0,0,0},
-                                      {0,0,0,1,0,0,0,0,1,0,1,0,0,0},
-                                      {0,0,0,1,1,0,0,0,1,0,1,0,0,0},
-                                      {0,0,0,1,1,1,0,0,0,0,1,0,0,0},
-                                      {0,0,0,1,1,1,0,0,0,0,1,0,0,0},
-                                      {0,0,0,1,1,0,0,0,1,1,1,0,0,0},
-                                      {0,0,0,1,0,0,0,0,0,0,0,0,0,0},}; 
+  // TODO: Fix all the offset bs
+  // COULDVE: Do option for getting the silhoutte of the binary cell 
+
+  int detection_indication[14][8] = {{1,0,0,0,0,0,0,0},
+                                     {1,1,0,0,0,1,1,1},
+                                     {1,1,1,0,0,0,0,1},
+                                     {1,1,1,0,0,0,0,1},
+                                     {1,1,0,0,0,0,0,1},
+                                     {1,0,0,0,0,0,0,1},
+                                     {1,1,1,1,1,1,0,1},
+                                     {1,0,0,0,0,1,0,1},
+                                     {1,1,0,0,0,1,0,1},
+                                     {1,1,1,0,0,0,0,1},
+                                     {1,1,1,0,0,0,0,1},
+                                     {1,1,0,0,0,1,1,1},
+                                     {1,0,0,0,0,0,0,0}}; 
   
   for (int i = 0; i < 14; ++i)
-    for (int j = 0; j < 14; ++j)
+    for (int j = 0; j < 8; ++j)
       if (detection_indication[i][j] == 1) {
-        image[x + offset + i][y + offset + j][0] = 255;
-        image[x + offset + i][y + offset + j][1] = 0;
-        image[x + offset + i][y + offset + j][2] = 0;
+        image[x + offset + i][y + offset + 3 + j][0] = 255;
+        image[x + offset + i][y + offset + 3 + j][1] = 0;
+        image[x + offset + i][y + offset + 3 + j][2] = 0;
       }
-
-  // do option for getting the silhoutte of the cell 
-  // curly brackets
-  // washing machine symbol 
-  // Lorem Ipsum 
-  // [] or only corners
-
-  // square
-  // for (int i = 0; i < totalWidth; ++i)
-  //   for (int j = 0; j < totalWidth; ++j)
-  //     if (i == 0 || i == totalWidth - 1 || j == 0 || j == totalWidth - 1) {
-  //       image[x + i][y + j][0] = 255;
-  //       image[x + i][y + j][1] = 0;
-  //       image[x + i][y + j][2] = 0;
-  //     }
 
 }
 
 void remove_cell(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int x, int y, int capAreaWidth) {
-  // TODO: maybe only color white parts of the binary; there's no need to color black pixels black
+  // TODO: Merge this with detect thing
   for (int i = 1; i <= capAreaWidth; ++i)
     for (int j = 1; j <= capAreaWidth; ++j)
-      binary[x + i][y + j] = 0;
+      // Only color black if white
+      if (binary[x + i][y + j] == 1)
+        binary[x + i][y + j] = 0;
 
 }
 
 void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int* cellCount, bool printCoords) {
-  // TODO: we assume that the erosion erases the border pixels of the image
+  int capWidth = 13;
   int frameWidth = 1;
-  int capAreaWidth = 15; 
-  // TODO: Maybe change the capture area to be 2d array
+  /*unsigned char kernel[21][21] = {{2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2},
+                                  {2,2,2,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,2,2,2},
+                                  {2,2,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,2,2},
+                                  {2,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,2},
+                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
+                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
+                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
+                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
+                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
+                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
+                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
+                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
+                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
+                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
+                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
+                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
+                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
+                                  {2,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,2},
+                                  {2,2,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,2,2},
+                                  {2,2,2,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,2,2,2},
+                                  {2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2},};
+  */
 
-  // TODO: Is it better to pull out the conditions of the for loop? 
-  for (int x = 0; x < BMP_WIDTH - (capAreaWidth + frameWidth); ++x)
-    for (int y = 0; y < BMP_WIDTH - (capAreaWidth + frameWidth); ++y)
-      
-      if (detection_frame_clear(binary, x, y, capAreaWidth + (frameWidth << 1)))
-        if (cell_detected(binary, x, y, capAreaWidth)) {
-          // TODO: fix your offset of the drawing, is >> 2 okay? 
-          draw_detection_indication(out_image, x, y, capAreaWidth >> 2);
-          remove_cell(binary, x, y, capAreaWidth);
+  // TODO: Is extracting conditions faster than having them present in the loop?
+  for (int x = 0; x < BMP_WIDTH - (capWidth + frameWidth); ++x)
+    for (int y = 0; y < BMP_WIDTH - (capWidth + frameWidth); ++y)
+      if (detection_frame_clear(binary, x, y, capWidth + (frameWidth << 1)))
+        if (cell_detected(binary, x, y, capWidth)) {
+          draw_detection_indication(out_image, x, y, capWidth >> 2);
+          remove_cell(binary, x, y, capWidth);
           ++*cellCount;
           if (printCoords)
-            printf("\tcell #%d: (%d, %d)\n", *cellCount, x + capAreaWidth >> 1, y + capAreaWidth >> 1);
+            printf("\tcell #%d: (%d, %d)\n", *cellCount, x + capWidth >> 1, y + capWidth >> 1);
         }
 
 }
 
-void binary_to_BMP(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char BMP[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS]) {
-  for (int x = 0; x < BMP_WIDTH; ++x) {
-    for (int y = 0; y < BMP_HEIGTH; ++y) {
-      for (int c = 0; c < BMP_CHANNELS; ++c) {
-        if (binary[x][y] == 1)
-          BMP[x][y][c] = 255;
-        else 
-          BMP[x][y][c] = 0;
-      }
-    }
+#if DEBUG
+  void binary_to_BMP(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char BMP[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS]) {
+    for (int x = 0; x < BMP_WIDTH; ++x)
+      for (int y = 0; y < BMP_HEIGTH; ++y)
+        for (int c = 0; c < BMP_CHANNELS; ++c)
+          if (binary[x][y] == 1)
+            BMP[x][y][c] = 255;
+          else 
+            BMP[x][y][c] = 0;
+
   }
-
-}
-
+#endif
 
 
 int main(int argc, char** argv) {
@@ -307,18 +331,20 @@ int main(int argc, char** argv) {
   // OpStep 1: Calculate threshold using Otsu's method.
   create_otsu_binary(input_image, image0_ptr);
 
-  // TODO: Why erode the image first? Shouldn't we detect the cells we can and then erode? or are we trying to get rid of noise? 
   // Step 4: Erode the binary image
   printf("Cell detection results:\n");
 
-
-  // TODO: MAKE THE DETECITON FRAME TRUE 
-
+  // Output binary step for debugging
+  #if DEBUG
+      snprintf(buffer, sizeof buffer, "./debug/step_%db.bmp", step++);
+      binary_to_BMP(image0_ptr, debug_image);
+      write_bitmap(debug_image, buffer);
+  #endif
 
   while(erode(image0_ptr, image1_ptr)) {
-    // print morph steps for debugging
+    // Output morph steps for debugging
     #if DEBUG
-      snprintf(buffer, sizeof buffer, "./debug/step_%d.bmp", step++);
+      snprintf(buffer, sizeof buffer, "./debug/step_%de.bmp", step++);
       binary_to_BMP(image1_ptr, debug_image);
       write_bitmap(debug_image, buffer);
     #endif
