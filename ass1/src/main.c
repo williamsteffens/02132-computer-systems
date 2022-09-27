@@ -53,6 +53,61 @@ int x_upper = BMP_WIDTH;
 int y_lower = 0;
 int y_upper = BMP_HEIGTH; 
 
+unsigned char struct_elem3[3][3] = {{0,1,0},
+                                    {1,1,1},
+                                    {0,1,0}};
+    
+unsigned char struct_elem5[5][5] = {{0,1,1,1,0},
+                                    {1,1,1,1,1},
+                                    {1,1,1,1,1},
+                                    {1,1,1,1,1},
+                                    {0,1,1,1,0}};
+
+unsigned char struct_elem7[7][7] = {{0,0,1,1,1,0,0},
+                                    {0,1,1,1,1,1,0},
+                                    {1,1,1,1,1,1,1},
+                                    {1,1,1,1,1,1,1},
+                                    {1,1,1,1,1,1,1},
+                                    {0,1,1,1,1,1,0},
+                                    {0,0,1,1,1,0,0}};
+
+unsigned char struct_elem9[9][9] = {{0,0,0,1,1,1,0,0,0},
+                                    {0,0,1,1,1,1,1,0,0},
+                                    {0,1,1,1,1,1,1,1,0},
+                                    {1,1,1,1,1,1,1,1,1},
+                                    {1,1,1,1,1,1,1,1,1},
+                                    {1,1,1,1,1,1,1,1,1},
+                                    {0,1,1,1,1,1,1,1,0},
+                                    {0,0,1,1,1,1,1,0,0},
+                                    {0,0,0,1,1,1,0,0,0}};                                    
+
+unsigned char struct_elem11[11][11] = {{0,0,0,0,1,1,1,0,0,0,0},
+                                       {0,0,0,1,1,1,1,1,0,0,0},
+                                       {0,0,1,1,1,1,1,1,1,0,0},
+                                       {0,1,1,1,1,1,1,1,1,1,0},
+                                       {1,1,1,1,1,1,1,1,1,1,1},
+                                       {1,1,1,1,1,1,1,1,1,1,1},
+                                       {1,1,1,1,1,1,1,1,1,1,1},
+                                       {0,1,1,1,1,1,1,1,1,1,0},
+                                       {0,0,1,1,1,1,1,1,1,0,0},
+                                       {0,0,0,1,1,1,1,1,0,0,0},
+                                       {0,0,0,0,1,1,1,0,0,0,0}}; 
+
+unsigned char struct_elem13[13][13] = {{0,0,0,0,1,1,1,1,1,0,0,0,0},
+                                       {0,0,0,1,1,1,1,1,1,1,0,0,0},
+                                       {0,0,1,1,1,1,1,1,1,1,1,0,0},
+                                       {0,1,1,1,1,1,1,1,1,1,1,1,0},
+                                       {1,1,1,1,1,1,1,1,1,1,1,1,1},
+                                       {1,1,1,1,1,1,1,1,1,1,1,1,1},
+                                       {1,1,1,1,1,1,1,1,1,1,1,1,1},
+                                       {1,1,1,1,1,1,1,1,1,1,1,1,1},
+                                       {1,1,1,1,1,1,1,1,1,1,1,1,1},
+                                       {0,1,1,1,1,1,1,1,1,1,1,1,0},
+                                       {0,0,1,1,1,1,1,1,1,1,1,0,0},
+                                       {0,0,0,1,1,1,1,1,1,1,0,0,0},
+                                       {0,0,0,0,1,1,1,1,1,0,0,0,0}};  
+
+#define KERSIZE 7
 
 
 void create_otsu_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char binary[BMP_WIDTH][BMP_HEIGTH]) {
@@ -104,7 +159,7 @@ void create_otsu_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNE
     for (int y = 0; y < BMP_HEIGTH; ++y) {
       grayVal = (unsigned char) (0.299 * in_image[x][y][0] + 0.587 * in_image[x][y][1] + 0.114 * in_image[x][y][2]);
       //grayVal = (in_image[x][y][0] + in_image[x][y][1] + in_image[x][y][2]) / 3;
-      binary[x][y] = grayVal > threshold - 20 ? 1 : 0;
+      binary[x][y] = grayVal > threshold - 7.5 ? 1 : 0;
     }
 
   #if DEBUG
@@ -113,24 +168,9 @@ void create_otsu_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNE
 
 }
 
-bool erode(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_binary[BMP_WIDTH][BMP_HEIGTH]) {
-  unsigned char size = 5; 
-  unsigned char halfSize = size >> 1;
-  unsigned char struct_elem[5][5] = {{0,1,1,1,0},
-                                     {1,1,1,1,1},
-                                     {1,1,1,1,1},
-                                     {1,1,1,1,1},
-                                     {0,1,1,1,0},};
+bool erode(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char kernelSize) {
+  unsigned char halfSize = kernelSize >> 1;
   
-  // unsigned char size = 7; 
-  // unsigned char halfSize = size >> 1;
-  // unsigned char struct_elem[7][7] = {{0,0,1,1,1,0,0},
-  //                                    {0,1,1,1,1,1,0},
-  //                                    {1,1,1,1,1,1,1},
-  //                                    {1,1,1,1,1,1,1},
-  //                                    {1,1,1,1,1,1,1},
-  //                                    {0,1,1,1,1,1,0},
-  //                                    {0,0,1,1,1,0,0}};
 
   bool wasEroded = false;
   bool erodePixel = false;
@@ -153,13 +193,13 @@ bool erode(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bin
 
       // Iterate over the struct_elem
       erodePixel = false; 
-      for (int i = 0; i < size; ++i) {
-        for (int j = 0; j < size; ++j) {
+      for (int i = 0; i < kernelSize; ++i) {
+        for (int j = 0; j < kernelSize; ++j) {
           // Should the structing be out of bounds, assume 1 by skipping (continue) for the part that overflows
           if (x + i - halfSize < 0 || x + i - halfSize >= BMP_WIDTH || y + j - halfSize < 0 || y + j - halfSize >= BMP_HEIGTH)
             continue;
 
-          if (struct_elem[i][j] && !(in_binary[x + i - halfSize][y + j - halfSize])) {
+          if (struct_elem7[i][j] && !(in_binary[x + i - halfSize][y + j - halfSize])) {
             erodePixel = true;
             // TODO: consider using goto here, instead of dbl break
             break; 
@@ -181,24 +221,9 @@ bool erode(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bin
   return wasEroded; 
 }
 
-bool dilate(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_binary[BMP_WIDTH][BMP_HEIGTH]) {
-  unsigned char size = 5; 
-  unsigned char halfSize = size >> 1;
-  unsigned char struct_elem[5][5] = {{0,1,1,1,0},
-                                     {1,1,1,1,1},
-                                     {1,1,1,1,1},
-                                     {1,1,1,1,1},
-                                     {0,1,1,1,0},};
+bool dilate(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_binary[BMP_WIDTH][BMP_HEIGTH], int kernelSize) {
+  unsigned char halfSize = kernelSize >> 1;
   
-  // unsigned char size = 7; 
-  // unsigned char halfSize = size >> 1;
-  // unsigned char struct_elem[7][7] = {{0,0,1,1,1,0,0},
-  //                                    {0,1,1,1,1,1,0},
-  //                                    {1,1,1,1,1,1,1},
-  //                                    {1,1,1,1,1,1,1},
-  //                                    {1,1,1,1,1,1,1},
-  //                                    {0,1,1,1,1,1,0},
-  //                                    {0,0,1,1,1,0,0}};
   
   bool dilatePixel = false;
   bool wasDilated = false; 
@@ -222,13 +247,13 @@ bool dilate(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bi
 
       // Iterate over the struct_elem
       dilatePixel = false; 
-      for (int i = 0; i < size; ++i) {
-        for (int j = 0; j < size; ++j) {
+      for (int i = 0; i < kernelSize; ++i) {
+        for (int j = 0; j < kernelSize; ++j) {
           // Should the structing be out of bounds, assume 0 by skipping (continue) for the part that overflows
           if (x + i - halfSize < 0 || x + i - halfSize >= BMP_WIDTH || y + j - halfSize < 0 || y + j - halfSize >= BMP_HEIGTH)
             continue;
 
-          if (struct_elem[i][j] && in_binary[x + i - halfSize][y + j - halfSize]) {
+          if (struct_elem7[i][j] && in_binary[x + i - halfSize][y + j - halfSize]) {
             dilatePixel = true;
             // TODO: consider using goto here, instead of dbl break
             break; 
@@ -250,40 +275,39 @@ bool dilate(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bi
   return wasDilated;
 }
 
-bool morpher_I_barely_know_her(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_binary[BMP_WIDTH][BMP_HEIGTH], Morph_OP op) {
+bool morpher_I_barely_know_her(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_binary[BMP_WIDTH][BMP_HEIGTH], Morph_OP op, unsigned char kernelSize) {
   bool wasEroded;
   bool wasDilated;
 
-  switch (op)
-  {
-  case erosion:
-    return erode(in_binary, out_binary);
-    break;
+  switch (op) {
+    case erosion:
+      return erode(in_binary, out_binary, kernelSize);
+      break;
 
-  case dilation: 
-    return dilate(in_binary, out_binary);
-    break; 
+    case dilation: 
+      return dilate(in_binary, out_binary, kernelSize);
+      break; 
 
-  case opening:
-    wasEroded = erode(in_binary, out_binary);
-    wasDilated = dilate(out_binary, in_binary);
-    // Make the out_binary point to the in_binary image
-    out_binary = in_binary;
-    return wasEroded || wasDilated;
-    break;
+    case opening:
+      wasEroded = erode(in_binary, out_binary, kernelSize);
+      wasDilated = dilate(out_binary, in_binary, kernelSize);
+      // Make the out_binary point to the in_binary image
+      out_binary = in_binary;
+      return wasEroded || wasDilated;
+      break;
 
-  case closing:
-    wasDilated = dilate(in_binary, out_binary);
-    wasEroded = erode(out_binary, in_binary);
-    // Make the out_binary point to the in_binary image
-    out_binary = in_binary;
-    return wasDilated || wasEroded;
-    break; 
+    case closing:
+      wasDilated = dilate(in_binary, out_binary, kernelSize);
+      wasEroded = erode(out_binary, in_binary, kernelSize);
+      // Make the out_binary point to the in_binary image
+      out_binary = in_binary;
+      return wasDilated || wasEroded;
+      break; 
 
-  default:
-    // Do something
-    // Would prob be good practice
-    break;
+    default:
+      fprintf(stderr, "Unknown morph operation!");
+      exit(1);
+      break;
   }
 };
 
@@ -315,22 +339,22 @@ void draw_detection_indication(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CH
   // TODO: Fix all the offset bs
   // COULDVE: Do option for getting the silhoutte of the binary cell 
 
-  int detection_indication[14][8] = {{1,0,0,0,0,0,0,0},
-                                     {1,1,0,0,0,1,1,1},
-                                     {1,1,1,0,0,0,0,1},
-                                     {1,1,1,0,0,0,0,1},
-                                     {1,1,0,0,0,0,0,1},
-                                     {1,0,0,0,0,0,0,1},
-                                     {1,1,1,1,1,1,0,1},
-                                     {1,0,0,0,0,1,0,1},
-                                     {1,1,0,0,0,1,0,1},
-                                     {1,1,1,0,0,0,0,1},
-                                     {1,1,1,0,0,0,0,1},
-                                     {1,1,0,0,0,1,1,1},
-                                     {1,0,0,0,0,0,0,0}}; 
+  int detection_indication[13][10] = {{0,1,0,0,0,0,0,0,0,0},
+                                      {0,1,1,0,0,0,1,1,1,0},
+                                      {0,1,1,1,0,0,0,0,1,0},
+                                      {0,1,1,1,0,0,0,0,1,0},
+                                      {0,1,1,0,0,0,0,0,1,0},
+                                      {0,1,0,0,0,0,0,0,1,0},
+                                      {0,1,1,1,1,1,1,0,1,0},
+                                      {0,1,0,0,0,0,1,0,1,0},
+                                      {0,1,1,0,0,0,1,0,1,0},
+                                      {0,1,1,1,0,0,0,0,1,0},
+                                      {0,1,1,1,0,0,0,0,1,0},
+                                      {0,1,1,0,0,0,1,1,1,0},
+                                      {0,1,0,0,0,0,0,0,0,0}}; 
   
-  for (int i = 0; i < 14; ++i)
-    for (int j = 0; j < 8; ++j)
+  for (int i = 0; i < 13; ++i)
+    for (int j = 0; j < 10; ++j)
       if (detection_indication[i][j] == 1) {
         image[x + offset + i][y + offset + 3 + j][0] = 255;
         image[x + offset + i][y + offset + 3 + j][1] = 0;
@@ -350,7 +374,7 @@ void remove_cell(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int x, int y, int 
 }
 
 void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int* cellCount, bool printCoords) {
-  int capWidth = 13;
+  int capWidth = 15;
   int frameWidth = 1;
   /*unsigned char kernel[21][21] = {{2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2},
                                   {2,2,2,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,2,2,2},
@@ -423,10 +447,10 @@ int main(int argc, char** argv) {
   read_bitmap(argv[1], input_image);
   
   // Step 2 and 3: Convert from RGB to GrayScale and apply the binary threshold to create a binary image
-  // OpStep 1: Calculate threshold using Otsu's method.
+  // OpStep: Calculate threshold using Otsu's method.
   create_otsu_binary(input_image, image0_ptr);
 
-  // Step 4: Erode the binary image
+  
   printf("Cell detection results:\n");
 
   // Output binary step for debugging
@@ -436,14 +460,19 @@ int main(int argc, char** argv) {
       write_bitmap(debug_image, buffer);
   #endif
 
-  // Output closing step for debugging
-  #if DEBUG
-      snprintf(buffer, sizeof buffer, "./debug/step_%dc.bmp", step++);
-      binary_to_BMP(image0_ptr, debug_image);
-      write_bitmap(debug_image, buffer);
-  #endif
+  // OpStep: Use the morphology operation closing
+  // morpher_I_barely_know_her(image0_ptr, image1_ptr, dilation, 5);
+  // morpher_I_barely_know_her(image1_ptr, image0_ptr, closing, 5);
 
-  while(morpher_I_barely_know_her(image0_ptr, image1_ptr, opening)) {
+  // Output closing step for debugging
+  // #if DEBUG
+  //     snprintf(buffer, sizeof buffer, "./debug/step_%dc.bmp", step++);
+  //     binary_to_BMP(image0_ptr, debug_image);
+  //     write_bitmap(debug_image, buffer);
+  // #endif
+
+  // Main steps of algo
+  while(morpher_I_barely_know_her(image0_ptr, image1_ptr, opening, KERSIZE)) {
     // Output morph steps for debugging
     #if DEBUG
       snprintf(buffer, sizeof buffer, "./debug/step_%dm.bmp", step++);
