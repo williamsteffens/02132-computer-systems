@@ -407,6 +407,7 @@ bool cell_detected_and_removed(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int 
 
 void draw_detection_indication(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int x, int y, int offset) {
   // TODO: Fix all the offset bs
+  // TODO: Faster mark? see how fast it is
   // COULDVE: Do option for getting the silhoutte of the binary cell 
 
   int detection_indication[13][10] = {{0,1,0,0,0,0,0,0,0,0},
@@ -439,17 +440,19 @@ void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out
 
   int x_min = x_lower;
   int x_max = x_upper;
-  bool x_clear = true;
+  bool x_clear_lower = true;
+  bool x_clear_upper = true; 
 
   // int y_min = y_lower;
   // int y_max = y_upper;
-  // bool y_clear = true; 
+  // bool y_clear = true;
 
 
   // TODO: Is extracting conditions faster than having them present in the loop?
-  for (int x = x_lower; x < x_upper - (capWidth + frameWidth); ++x) {
-    x_clear = true;
-    for (int y = y_lower; y < y_upper - (capWidth + frameWidth); ++y) {
+  x_clear_lower = true;
+  for (int x = 0; x < BMP_WIDTH - (capWidth + frameWidth); ++x) {
+    x_clear_upper = true; 
+    for (int y = 0; y < BMP_HEIGTH - (capWidth + frameWidth); ++y) {
       //y_clear = true; 
       if (detection_frame_clear(binary, x, y, capWidth + (frameWidth << 1))) {
         if (cell_detected_and_removed(binary, x, y, capWidth)) {
@@ -466,10 +469,13 @@ void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out
 
         }
       } else {
-          if (x_clear)
-            x_clear = false;
-          // if (y_clear)
-          //   y_clear = false; 
+          if (x_clear_lower)
+            x_clear_lower = false;
+          
+          if (x_clear_upper) {
+            x_clear_upper = false; 
+
+          }
       }
 
       // if (y_clear && y == y_lower) {
@@ -478,18 +484,25 @@ void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out
       // }
     }
 
-    if (x_clear && x == x_min)
-      x_min = x;
-
-    if (x_clear && x == x_upper - (capWidth + frameWidth) - 1)
-      // TODO: DO THIS BETTER:) store the value and use it if everything under is clear
-      --x_upper;
-  }
-
-  #if DEBUG
+    if (x_clear_lower) {
+      ++x_min;
+      #if DEBUG
         input_image[x_min][0][1] = 255; 
+      #endif  
+    }
+
+    if (x_clear_upper && x > x_min) {
+      x_max = x;
+      #if DEBUG
         input_image[x_max][0][2] = 255;
-  #endif
+      #endif
+    }
+
+
+    // if (x_clear && x == x_upper - (capWidth + frameWidth) - 1)
+    //   // TODO: DO THIS BETTER:) store the value and use it if everything under is clear
+    //   --x_upper;
+  }
 
   x_lower = x_min;
   x_upper = x_max;
