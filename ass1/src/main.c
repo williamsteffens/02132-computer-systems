@@ -30,7 +30,6 @@ typedef enum {
   closing
 } Morph_OP;
 
-// TODO: add morph enum for erode and dilation, or opening / closing here:)
 // TODO: add enum for drawing:)
 
 unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
@@ -38,6 +37,7 @@ unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
   unsigned char debug_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
   char c;
 #endif
+// TODO: compress? :)
 unsigned char intermedia_image0[BMP_WIDTH][BMP_HEIGTH];
 unsigned char intermedia_image1[BMP_WIDTH][BMP_HEIGTH];
 unsigned char (*image0_ptr)[BMP_HEIGTH] = intermedia_image0;
@@ -108,20 +108,30 @@ unsigned char struct_elem13[13][13] = {{0,0,0,0,1,1,1,1,1,0,0,0,0},
                                        {0,0,0,0,1,1,1,1,1,0,0,0,0}};  
 
 
-
-void create_otsu_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char binary[BMP_WIDTH][BMP_HEIGTH]) {
-  unsigned histogram[256] = {0};
+void create_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char binary[BMP_WIDTH][BMP_HEIGTH]) {
   unsigned char grayVal;
-  int max_intensity = 256;
-  int threshold = 0;
-  int N = BMP_WIDTH * BMP_HEIGTH;
-  int omega_b, omega_f = 0;
-  float mu_b, mu_f, mu_diff, sum, sumB, inter_var, var_max = 0.0f;
+  unsigned char threshold = 94;
 
   for (int x = 0; x < BMP_WIDTH; ++x)
     for (int y = 0; y < BMP_HEIGTH; ++y) {
       grayVal = (unsigned char) (0.299 * in_image[x][y][0] + 0.587 * in_image[x][y][1] + 0.114 * in_image[x][y][2]);
-      //grayVal = (in_image[x][y][0] + in_image[x][y][1] + in_image[x][y][2]) / 3;
+      binary[x][y] = grayVal > threshold ? 1 : 0;
+    }
+
+}
+
+void create_otsu_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char binary[BMP_WIDTH][BMP_HEIGTH]) {
+  unsigned histogram[256] = {0};
+  unsigned char grayVal;
+  unsigned char max_intensity = 255;
+  unsigned char threshold = 0;
+  int N = BMP_WIDTH * BMP_HEIGTH;
+  int omega_b, omega_f = 0;
+  float mu_b, mu_f, mu_diff, sum, sumB, inter_var, var_max = 0.0f;
+
+  for (int x = 0; x <= BMP_WIDTH; ++x)
+    for (int y = 0; y <= BMP_HEIGTH; ++y) {
+      grayVal = (unsigned char) (0.299 * in_image[x][y][0] + 0.587 * in_image[x][y][1] + 0.114 * in_image[x][y][2]);
       ++histogram[grayVal];
     }
 
@@ -154,11 +164,11 @@ void create_otsu_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNE
     }
   }
 
-  for (int x = 0; x < BMP_WIDTH; ++x)
-    for (int y = 0; y < BMP_HEIGTH; ++y) {
+  threshold -= 20;
+  for (int x = 0; x <= BMP_WIDTH; ++x)
+    for (int y = 0; y <= BMP_HEIGTH; ++y) {
       grayVal = (unsigned char) (0.299 * in_image[x][y][0] + 0.587 * in_image[x][y][1] + 0.114 * in_image[x][y][2]);
-      //grayVal = (in_image[x][y][0] + in_image[x][y][1] + in_image[x][y][2]) / 3;
-      binary[x][y] = grayVal > threshold - 7.5 ? 1 : 0;
+      binary[x][y] = grayVal > threshold ? 1 : 0;
     }
 
   #if DEBUG
@@ -170,7 +180,6 @@ void create_otsu_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNE
 bool erode(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char kernelSize) {
   unsigned char halfSize = kernelSize >> 1;
   
-
   bool wasEroded = false;
   bool erodePixel = false;
 
@@ -332,32 +341,32 @@ bool dilate(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bi
   return wasDilated;
 }
 
-bool morpher_I_barely_know_her(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_binary[BMP_WIDTH][BMP_HEIGTH], Morph_OP op, unsigned char kernelSize) {
+bool morpher_I_barely_know_her(unsigned char binary_1[BMP_WIDTH][BMP_HEIGTH], unsigned char binary_2[BMP_WIDTH][BMP_HEIGTH], Morph_OP op, unsigned char kernelSize) {
   bool wasEroded;
   bool wasDilated;
 
   switch (op) {
     case erosion:
-      return erode(in_binary, out_binary, kernelSize);
+      return erode(binary_1, binary_2, kernelSize);
       break;
 
     case dilation: 
-      return dilate(in_binary, out_binary, kernelSize);
+      return dilate(binary_1, binary_2, kernelSize);
       break; 
 
     case opening:
-      wasEroded = erode(in_binary, out_binary, kernelSize);
-      wasDilated = dilate(out_binary, in_binary, kernelSize);
-      // Make the out_binary point to the in_binary image
-      out_binary = in_binary;
+      wasEroded = erode(binary_1, binary_2, kernelSize);
+      wasDilated = dilate(binary_2, binary_1, kernelSize);
+      // Make the binary_2 point to the binary_1 image
+      binary_2 = binary_1;
       return wasEroded || wasDilated;
       break;
 
     case closing:
-      wasDilated = dilate(in_binary, out_binary, kernelSize);
-      wasEroded = erode(out_binary, in_binary, kernelSize);
-      // Make the out_binary point to the in_binary image
-      out_binary = in_binary;
+      wasDilated = dilate(binary_1, binary_2, kernelSize);
+      wasEroded = erode(binary_2, binary_1, kernelSize);
+      // Make the binary_2 point to the binary_1 image
+      binary_2 = binary_1;
       return wasDilated || wasEroded;
       break; 
 
@@ -383,13 +392,17 @@ bool detection_frame_clear(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int x, i
   return true; 
 }
 
-bool cell_detected(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int x, int y, int capAreaWidth) {
+bool cell_detected_and_removed(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int x, int y, int capAreaWidth) {
+  bool cellDetected = false;
+  
   for (int i = 1; i <= capAreaWidth; ++i)
     for (int j = 1; j <= capAreaWidth; ++j)
-      if (binary[x + i][y + j] == 1)
-        return true;
+      if (binary[x + i][y + j]) {
+        cellDetected = true;
+        binary[x + i][y + j] = 0;
+      }
 
-  return false;
+  return cellDetected;
 }
 
 void draw_detection_indication(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int x, int y, int offset) {
@@ -420,31 +433,66 @@ void draw_detection_indication(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CH
 
 }
 
-void remove_cell(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int x, int y, int capAreaWidth) {
-  // TODO: Merge this with detect thing
-  for (int i = 1; i <= capAreaWidth; ++i)
-    for (int j = 1; j <= capAreaWidth; ++j)
-      // Only color black if white
-      //if (binary[x + i][y + j] == 1)
-        binary[x + i][y + j] = 0;
-
-}
-
 void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int* cellCount, bool printCoords) {
   int capWidth = 15;
   int frameWidth = 1;
 
+  int x_min = x_lower;
+  int x_max = x_upper;
+  bool x_clear = true;
+
+  // int y_min = y_lower;
+  // int y_max = y_upper;
+  // bool y_clear = true; 
+
+
   // TODO: Is extracting conditions faster than having them present in the loop?
-  for (int x = 0; x < BMP_WIDTH - (capWidth + frameWidth); ++x)
-    for (int y = 0; y < BMP_HEIGTH - (capWidth + frameWidth); ++y)
-      if (detection_frame_clear(binary, x, y, capWidth + (frameWidth << 1)))
-        if (cell_detected(binary, x, y, capWidth)) {
+  for (int x = x_lower; x < x_upper - (capWidth + frameWidth); ++x) {
+    x_clear = true;
+    for (int y = y_lower; y < y_upper - (capWidth + frameWidth); ++y) {
+      //y_clear = true; 
+      if (detection_frame_clear(binary, x, y, capWidth + (frameWidth << 1))) {
+        if (cell_detected_and_removed(binary, x, y, capWidth)) {
           draw_detection_indication(out_image, x, y, capWidth >> 2);
-          remove_cell(binary, x, y, capWidth);
           ++*cellCount;
-          if (printCoords)
-            printf("\tcell #%d: (%d, %d)\n", *cellCount, x + capWidth >> 1, y + capWidth >> 1);
+          if (printCoords) {
+            // if (*cellCount == 1) {
+            //   out_image[x][y][1] = 255;
+            // }
+            // if (*cellCount == 2)
+            //   out_image[x][y][2] = 255; 
+            printf("\tcell #%d: (%d, %d)\n", *cellCount, x + (capWidth >> 1), y + (capWidth >> 1));
+          }
+
         }
+      } else {
+          if (x_clear)
+            x_clear = false;
+          // if (y_clear)
+          //   y_clear = false; 
+      }
+
+      // if (y_clear && y == y_lower) {
+      // input_image[0][y][1] = 255; 
+      // ++y_lower;
+      // }
+    }
+
+    if (x_clear && x == x_min)
+      x_min = x;
+
+    if (x_clear && x == x_upper - (capWidth + frameWidth) - 1)
+      // TODO: DO THIS BETTER:) store the value and use it if everything under is clear
+      --x_upper;
+  }
+
+  #if DEBUG
+        input_image[x_min][0][1] = 255; 
+        input_image[x_max][0][2] = 255;
+  #endif
+
+  x_lower = x_min;
+  x_upper = x_max;
 
 }
 
@@ -483,7 +531,8 @@ int main(int argc, char** argv) {
   
   // Step 2 and 3: Convert from RGB to GrayScale and apply the binary threshold to create a binary image
   // OpStep: Calculate threshold using Otsu's method.
-  create_otsu_binary(input_image, image0_ptr);
+  //create_otsu_binary(input_image, image0_ptr);
+  create_binary(input_image, image0_ptr);
 
   printf("Cell detection results:\n");
 
