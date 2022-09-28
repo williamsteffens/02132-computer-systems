@@ -107,7 +107,6 @@ unsigned char struct_elem13[13][13] = {{0,0,0,0,1,1,1,1,1,0,0,0,0},
                                        {0,0,0,1,1,1,1,1,1,1,0,0,0},
                                        {0,0,0,0,1,1,1,1,1,0,0,0,0}};  
 
-#define KERSIZE 9
 
 
 void create_otsu_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char binary[BMP_WIDTH][BMP_HEIGTH]) {
@@ -518,29 +517,46 @@ int main(int argc, char** argv) {
   #endif
 
   // OpStep: Use the morphology operation opening and closing
-  morpher_I_barely_know_her(image0_ptr, image1_ptr, opening, KERSIZE);
-  morpher_I_barely_know_her(image1_ptr, image0_ptr, closing, KERSIZE);
+  morpher_I_barely_know_her(image0_ptr, image1_ptr, opening, 9);
+  morpher_I_barely_know_her(image1_ptr, image0_ptr, closing, 9);
 
-  // Output opening step for debugging
+  // Output opening and closing step for debugging
   #if DEBUG
       snprintf(buffer, sizeof buffer, "./debug/step_%docm.bmp", step++);
       binary_to_BMP(image0_ptr, debug_image);
       write_bitmap(debug_image, buffer);
   #endif
 
-  return 0; 
+  detect_cells(image0_ptr, input_image, &cellCount, false);
+
+  // Output first detection step for debugging
+  #if DEBUG
+      snprintf(buffer, sizeof buffer, "./debug/step_%docm.bmp", step++);
+      binary_to_BMP(image0_ptr, debug_image);
+      write_bitmap(debug_image, buffer);
+  #endif
+
+  unsigned char kernelSize = 9; 
 
   // Main steps of algo
-  while(morpher_I_barely_know_her(image1_ptr, image0_ptr, opening, KERSIZE)) {
+  while(morpher_I_barely_know_her(image0_ptr, image1_ptr, opening, kernelSize)) {
     // Output morph steps for debugging
     #if DEBUG
       snprintf(buffer, sizeof buffer, "./debug/step_%dom.bmp", step++);
-      binary_to_BMP(image0_ptr, debug_image);
+      binary_to_BMP(image1_ptr, debug_image);
       write_bitmap(debug_image, buffer);
     #endif
 
     // Step 5 and 6: Detect cells and generate output image
-    detect_cells(image0_ptr, input_image, &cellCount, false);
+    detect_cells(image1_ptr, input_image, &cellCount, false);
+
+    // dec the kernel size for morph
+    // TODO: do the same for the capArea if needed?
+    if (kernelSize == 5)
+      kernelSize = 3;
+    
+    if (kernelSize == 9)
+      kernelSize = 5;
 
     // Swap ptr for the intermedia images
     tmp_ptr = image0_ptr;
