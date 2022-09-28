@@ -558,7 +558,7 @@ int main(int argc, char** argv) {
 
   // Output first detection step for debugging
   #if DEBUG
-      snprintf(buffer, sizeof buffer, "./debug/step_%docm.bmp", step++);
+      snprintf(buffer, sizeof buffer, "./debug/step_%docCount.bmp", step++);
       binary_to_BMP(image0_ptr, debug_image);
       write_bitmap(debug_image, buffer);
   #endif
