@@ -433,32 +433,10 @@ void remove_cell(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int x, int y, int 
 void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int* cellCount, bool printCoords) {
   int capWidth = 15;
   int frameWidth = 1;
-  /*unsigned char kernel[21][21] = {{2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2},
-                                  {2,2,2,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,2,2,2},
-                                  {2,2,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,2,2},
-                                  {2,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,2},
-                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
-                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
-                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
-                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
-                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
-                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
-                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
-                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
-                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
-                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
-                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
-                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
-                                  {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
-                                  {2,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,2},
-                                  {2,2,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,2,2},
-                                  {2,2,2,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,2,2,2},
-                                  {2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2},};
-  */
 
   // TODO: Is extracting conditions faster than having them present in the loop?
   for (int x = 0; x < BMP_WIDTH - (capWidth + frameWidth); ++x)
-    for (int y = 0; y < BMP_WIDTH - (capWidth + frameWidth); ++y)
+    for (int y = 0; y < BMP_HEIGTH - (capWidth + frameWidth); ++y)
       if (detection_frame_clear(binary, x, y, capWidth + (frameWidth << 1)))
         if (cell_detected(binary, x, y, capWidth)) {
           draw_detection_indication(out_image, x, y, capWidth >> 2);
