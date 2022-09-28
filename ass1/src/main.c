@@ -435,47 +435,55 @@ void draw_detection_indication(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CH
 }
 
 void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int* cellCount, bool printCoords) {
-  int capWidth = 15;
-  int frameWidth = 1;
+  int cap_width = 15;
+  int frame_width = 1;
 
   int x_min = x_lower;
   int x_max = x_upper;
   bool x_clear_lower = true;
   bool x_clear_upper = true; 
 
-  // int y_min = y_lower;
-  // int y_max = y_upper;
-  // bool y_clear = true;
+  int y_min = y_upper;
+  int y_max = y_upper;
+  bool y_clear_lower = true;
+  bool y_clear_upper = true;
 
 
   // TODO: Is extracting conditions faster than having them present in the loop?
   x_clear_lower = true;
-  for (int x = 0; x < BMP_WIDTH - (capWidth + frameWidth); ++x) {
-    x_clear_upper = true; 
-    for (int y = 0; y < BMP_HEIGTH - (capWidth + frameWidth); ++y) {
-      //y_clear = true; 
-      if (detection_frame_clear(binary, x, y, capWidth + (frameWidth << 1))) {
-        if (cell_detected_and_removed(binary, x, y, capWidth)) {
-          draw_detection_indication(out_image, x, y, capWidth >> 2);
-          ++*cellCount;
-          if (printCoords) {
-            // if (*cellCount == 1) {
-            //   out_image[x][y][1] = 255;
-            // }
-            // if (*cellCount == 2)
-            //   out_image[x][y][2] = 255; 
-            printf("\tcell #%d: (%d, %d)\n", *cellCount, x + (capWidth >> 1), y + (capWidth >> 1));
-          }
+  for (int x = x_lower; x < x_upper - (cap_width + frame_width); ++x) {
 
+    x_clear_upper = true; 
+    y_clear_lower = true; 
+    for (int y = y_lower; y < y_upper - (cap_width + frame_width); ++y) {
+
+      if (detection_frame_clear(binary, x, y, cap_width + (frame_width << 1))) {
+        if (cell_detected_and_removed(binary, x, y, cap_width)) {
+          draw_detection_indication(out_image, x, y, cap_width >> 2);
+          ++*cellCount;
+          if (printCoords)  
+            printf("\tcell #%d: (%d, %d)\n", *cellCount, x + (cap_width >> 1), y + (cap_width >> 1));
         }
       } else {
           if (x_clear_lower)
             x_clear_lower = false;
           
-          if (x_clear_upper) {
+          if (x_clear_upper)
             x_clear_upper = false; 
 
-          }
+          if (y_clear_lower)
+            y_clear_lower = false;
+
+          // if (y_clear_upper)
+          //   y_clear_upper = false;
+      }
+
+      if (!y_clear_lower && y < y_min) {
+        y_min = y;
+        #if DEBUG
+          out_image[x][y][0] = 255;
+          out_image[x][y][2] = 255;
+        #endif  
       }
 
       // if (y_clear && y == y_lower) {
@@ -487,25 +495,30 @@ void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out
     if (x_clear_lower) {
       ++x_min;
       #if DEBUG
-        input_image[x_min][0][1] = 255; 
+        out_image[x_min][0][1] = 255; 
       #endif  
     }
 
-    if (x_clear_upper && x > x_min) {
-      x_max = x;
-      #if DEBUG
-        input_image[x_max][0][2] = 255;
-      #endif
+    if (!x_clear_upper && x > x_min) {
+      x_max = x + cap_width + (frame_width << 1);
     }
 
+    //if (y_clear_lower)
 
-    // if (x_clear && x == x_upper - (capWidth + frameWidth) - 1)
+    // if (x_clear && x == x_upper - (cap_width + frame_width) - 1)
     //   // TODO: DO THIS BETTER:) store the value and use it if everything under is clear
     //   --x_upper;
   }
 
+  #if DEBUG
+    out_image[x_max][0][2] = 255;
+  #endif
+
   x_lower = x_min;
   x_upper = x_max;
+
+  y_lower = y_min;
+  printf("%d\n", y_lower);
 
 }
 
@@ -589,6 +602,12 @@ int main(int argc, char** argv) {
 
     // Step 5 and 6: Detect cells and generate output image
     detect_cells(image1_ptr, input_image, &cellCount, false);
+
+    // Output steps on the final image
+    #if DEBUG
+      snprintf(buffer, sizeof buffer, "./debug2/step_%dfinal.bmp", step);
+      write_bitmap(input_image, buffer);
+    #endif
 
     // dec the kernel size for morph
     // TODO: do the same for the capArea if needed?
