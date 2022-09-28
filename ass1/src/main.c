@@ -107,7 +107,7 @@ unsigned char struct_elem13[13][13] = {{0,0,0,0,1,1,1,1,1,0,0,0,0},
                                        {0,0,0,1,1,1,1,1,1,1,0,0,0},
                                        {0,0,0,0,1,1,1,1,1,0,0,0,0}};  
 
-#define KERSIZE 7
+#define KERSIZE 9
 
 
 void create_otsu_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char binary[BMP_WIDTH][BMP_HEIGTH]) {
@@ -199,11 +199,40 @@ bool erode(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bin
           if (x + i - halfSize < 0 || x + i - halfSize >= BMP_WIDTH || y + j - halfSize < 0 || y + j - halfSize >= BMP_HEIGTH)
             continue;
 
-          if (struct_elem7[i][j] && !(in_binary[x + i - halfSize][y + j - halfSize])) {
-            erodePixel = true;
-            // TODO: consider using goto here, instead of dbl break
-            break; 
-          }
+          if (kernelSize == 3)
+            if (struct_elem3[i][j] && !(in_binary[x + i - halfSize][y + j - halfSize])) {
+              erodePixel = true;
+              // TODO: consider using goto here, instead of dbl break
+              break; 
+            }
+
+          if (kernelSize == 5)
+            if (struct_elem5[i][j] && !(in_binary[x + i - halfSize][y + j - halfSize])) {
+              erodePixel = true;
+              // TODO: consider using goto here, instead of dbl break
+              break; 
+            }
+
+          if (kernelSize == 7)
+            if (struct_elem7[i][j] && !(in_binary[x + i - halfSize][y + j - halfSize])) {
+              erodePixel = true;
+              // TODO: consider using goto here, instead of dbl break
+              break; 
+            }
+
+          if (kernelSize == 9)
+            if (struct_elem9[i][j] && !(in_binary[x + i - halfSize][y + j - halfSize])) {
+              erodePixel = true;
+              // TODO: consider using goto here, instead of dbl break
+              break; 
+            }
+          
+          if (kernelSize == 11)
+            if (struct_elem11[i][j] && !(in_binary[x + i - halfSize][y + j - halfSize])) {
+              erodePixel = true;
+              // TODO: consider using goto here, instead of dbl break
+              break; 
+            }
         }
         if (erodePixel)
           break;
@@ -253,11 +282,40 @@ bool dilate(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bi
           if (x + i - halfSize < 0 || x + i - halfSize >= BMP_WIDTH || y + j - halfSize < 0 || y + j - halfSize >= BMP_HEIGTH)
             continue;
 
-          if (struct_elem7[i][j] && in_binary[x + i - halfSize][y + j - halfSize]) {
-            dilatePixel = true;
-            // TODO: consider using goto here, instead of dbl break
-            break; 
-          }
+          if (kernelSize == 3)
+            if (struct_elem3[i][j] && in_binary[x + i - halfSize][y + j - halfSize]) {
+              dilatePixel = true;
+              // TODO: consider using goto here, instead of dbl break
+              break; 
+            }
+
+          if (kernelSize == 5)
+            if (struct_elem5[i][j] && in_binary[x + i - halfSize][y + j - halfSize]) {
+              dilatePixel = true;
+              // TODO: consider using goto here, instead of dbl break
+              break; 
+            }
+
+          if (kernelSize == 7)
+            if (struct_elem5[i][j] && in_binary[x + i - halfSize][y + j - halfSize]) {
+              dilatePixel = true;
+              // TODO: consider using goto here, instead of dbl break
+              break; 
+            }
+
+          if (kernelSize == 9)
+            if (struct_elem9[i][j] && in_binary[x + i - halfSize][y + j - halfSize]) {
+              dilatePixel = true;
+              // TODO: consider using goto here, instead of dbl break
+              break; 
+            }
+
+          if (kernelSize == 11)
+            if (struct_elem11[i][j] && in_binary[x + i - halfSize][y + j - halfSize]) {
+              dilatePixel = true;
+              // TODO: consider using goto here, instead of dbl break
+              break; 
+            }
         }
         if (dilatePixel)
           break;
@@ -450,7 +508,6 @@ int main(int argc, char** argv) {
   // OpStep: Calculate threshold using Otsu's method.
   create_otsu_binary(input_image, image0_ptr);
 
-  
   printf("Cell detection results:\n");
 
   // Output binary step for debugging
@@ -460,28 +517,30 @@ int main(int argc, char** argv) {
       write_bitmap(debug_image, buffer);
   #endif
 
-  // OpStep: Use the morphology operation closing
-  // morpher_I_barely_know_her(image0_ptr, image1_ptr, dilation, 5);
-  // morpher_I_barely_know_her(image1_ptr, image0_ptr, closing, 5);
+  // OpStep: Use the morphology operation opening and closing
+  morpher_I_barely_know_her(image0_ptr, image1_ptr, opening, KERSIZE);
+  morpher_I_barely_know_her(image1_ptr, image0_ptr, closing, KERSIZE);
 
-  // Output closing step for debugging
-  // #if DEBUG
-  //     snprintf(buffer, sizeof buffer, "./debug/step_%dc.bmp", step++);
-  //     binary_to_BMP(image0_ptr, debug_image);
-  //     write_bitmap(debug_image, buffer);
-  // #endif
+  // Output opening step for debugging
+  #if DEBUG
+      snprintf(buffer, sizeof buffer, "./debug/step_%docm.bmp", step++);
+      binary_to_BMP(image0_ptr, debug_image);
+      write_bitmap(debug_image, buffer);
+  #endif
+
+  return 0; 
 
   // Main steps of algo
-  while(morpher_I_barely_know_her(image0_ptr, image1_ptr, opening, KERSIZE)) {
+  while(morpher_I_barely_know_her(image1_ptr, image0_ptr, opening, KERSIZE)) {
     // Output morph steps for debugging
     #if DEBUG
-      snprintf(buffer, sizeof buffer, "./debug/step_%dm.bmp", step++);
-      binary_to_BMP(image1_ptr, debug_image);
+      snprintf(buffer, sizeof buffer, "./debug/step_%dom.bmp", step++);
+      binary_to_BMP(image0_ptr, debug_image);
       write_bitmap(debug_image, buffer);
     #endif
 
     // Step 5 and 6: Detect cells and generate output image
-    detect_cells(image1_ptr, input_image, &cellCount, false);
+    detect_cells(image0_ptr, input_image, &cellCount, false);
 
     // Swap ptr for the intermedia images
     tmp_ptr = image0_ptr;
