@@ -444,19 +444,16 @@ void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out
   bool x_clear_upper = true; 
 
   int y_min = y_upper;
-  int y_max = y_upper;
+  int y_max = y_lower;
   bool y_clear_lower = true;
-  bool y_clear_upper = true;
 
 
   // TODO: Is extracting conditions faster than having them present in the loop?
   x_clear_lower = true;
-  for (int x = x_lower; x < x_upper - (cap_width + frame_width); ++x) {
-
+  for (int x = x_lower; x < x_upper - (cap_width + 1); ++x) {
     x_clear_upper = true; 
-    y_clear_lower = true; 
-    for (int y = y_lower; y < y_upper - (cap_width + frame_width); ++y) {
-
+    y_clear_lower = true;
+    for (int y = y_lower; y < y_upper - (cap_width + 1); ++y) {
       if (detection_frame_clear(binary, x, y, cap_width + (frame_width << 1))) {
         if (cell_detected_and_removed(binary, x, y, cap_width)) {
           draw_detection_indication(out_image, x, y, cap_width >> 2);
@@ -465,17 +462,17 @@ void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out
             printf("\tcell #%d: (%d, %d)\n", *cellCount, x + (cap_width >> 1), y + (cap_width >> 1));
         }
       } else {
-          if (x_clear_lower)
-            x_clear_lower = false;
-          
-          if (x_clear_upper)
-            x_clear_upper = false; 
+        x_clear_lower = false;
+        x_clear_upper = false; 
+        y_clear_lower = false;
 
-          if (y_clear_lower)
-            y_clear_lower = false;
-
-          // if (y_clear_upper)
-          //   y_clear_upper = false;
+        if (y > y_max && y > y_min) {
+          y_max = y;
+          #if DEBUG
+            out_image[x][y][1] = 255;
+            out_image[x][y][2] = 255;
+          #endif    
+        }
       }
 
       if (!y_clear_lower && y < y_min) {
@@ -483,13 +480,8 @@ void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out
         #if DEBUG
           out_image[x][y][0] = 255;
           out_image[x][y][2] = 255;
-        #endif  
+        #endif
       }
-
-      // if (y_clear && y == y_lower) {
-      // input_image[0][y][1] = 255; 
-      // ++y_lower;
-      // }
     }
 
     if (x_clear_lower) {
@@ -500,14 +492,8 @@ void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out
     }
 
     if (!x_clear_upper && x > x_min) {
-      x_max = x + cap_width + (frame_width << 1);
+      x_max = x;
     }
-
-    //if (y_clear_lower)
-
-    // if (x_clear && x == x_upper - (cap_width + frame_width) - 1)
-    //   // TODO: DO THIS BETTER:) store the value and use it if everything under is clear
-    //   --x_upper;
   }
 
   #if DEBUG
@@ -515,11 +501,14 @@ void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out
   #endif
 
   x_lower = x_min;
-  x_upper = x_max;
+  x_upper = x_max + cap_width + 2;;
 
   y_lower = y_min;
-  printf("%d\n", y_lower);
+  y_upper = y_max + cap_width + 2; 
 
+  
+  //printf("%d\n", x_upper);
+  printf("%d\n", y_upper);
 }
 
 #if DEBUG
