@@ -14,7 +14,7 @@ Cell counting program - Ass1
 
 
 
-// Morphologies
+// Morphological operations
 typedef enum {
   erosion,
   dilation,
