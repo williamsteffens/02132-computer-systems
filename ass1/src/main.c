@@ -12,16 +12,12 @@ Cell counting program - Ass1
 
 #include "cbmp.h"
 
-
-
 // start = clock();
 // /* The code that has to be measured. */
 // end = clock();
 // cpu_time_used = end - start;
 // printf("Total time: %f ms\n", cpu_time_used * 1000.0 /
 // CLOCKS_PER_SEC);
-
-// TODO: add the above as needed, and look into macros in C
 
 typedef enum {
   erosion,
@@ -30,14 +26,13 @@ typedef enum {
   closing
 } Morph_OP;
 
-// TODO: add enum for drawing:)
 
 unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
 #if DEBUG
   unsigned char debug_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
   char c;
 #endif
-// TODO: compress? :)
+
 unsigned char intermedia_image0[BMP_WIDTH][BMP_HEIGTH];
 unsigned char intermedia_image1[BMP_WIDTH][BMP_HEIGTH];
 unsigned char (*image0_ptr)[BMP_HEIGTH] = intermedia_image0;
@@ -131,7 +126,7 @@ void create_otsu_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNE
 
   for (int x = 0; x <= BMP_WIDTH; ++x)
     for (int y = 0; y <= BMP_HEIGTH; ++y) {
-      grayVal = (unsigned char) (0.299 * in_image[x][y][0] + 0.587 * in_image[x][y][1] + 0.114 * in_image[x][y][2]);
+      grayVal = (unsigned char) (0.2126 * in_image[x][y][0] + 0.7152 * in_image[x][y][1] + 0.0722 * in_image[x][y][2]);
       ++histogram[grayVal];
     }
 
@@ -167,7 +162,7 @@ void create_otsu_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNE
   threshold -= 20;
   for (int x = 0; x <= BMP_WIDTH; ++x)
     for (int y = 0; y <= BMP_HEIGTH; ++y) {
-      grayVal = (unsigned char) (0.299 * in_image[x][y][0] + 0.587 * in_image[x][y][1] + 0.114 * in_image[x][y][2]);
+      grayVal = (unsigned char) (0.2126 * in_image[x][y][0] + 0.7152 * in_image[x][y][1] + 0.0722 * in_image[x][y][2]);
       binary[x][y] = grayVal > threshold ? 1 : 0;
     }
 
@@ -210,35 +205,30 @@ bool erode(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bin
           if (kernelSize == 3)
             if (struct_elem3[i][j] && !(in_binary[x + i - halfSize][y + j - halfSize])) {
               erodePixel = true;
-              // TODO: consider using goto here, instead of dbl break
               break; 
             }
 
           if (kernelSize == 5)
             if (struct_elem5[i][j] && !(in_binary[x + i - halfSize][y + j - halfSize])) {
               erodePixel = true;
-              // TODO: consider using goto here, instead of dbl break
               break; 
             }
 
           if (kernelSize == 7)
             if (struct_elem7[i][j] && !(in_binary[x + i - halfSize][y + j - halfSize])) {
               erodePixel = true;
-              // TODO: consider using goto here, instead of dbl break
               break; 
             }
 
           if (kernelSize == 9)
             if (struct_elem9[i][j] && !(in_binary[x + i - halfSize][y + j - halfSize])) {
               erodePixel = true;
-              // TODO: consider using goto here, instead of dbl break
               break; 
             }
           
           if (kernelSize == 11)
             if (struct_elem11[i][j] && !(in_binary[x + i - halfSize][y + j - halfSize])) {
               erodePixel = true;
-              // TODO: consider using goto here, instead of dbl break
               break; 
             }
         }
@@ -293,35 +283,30 @@ bool dilate(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bi
           if (kernelSize == 3)
             if (struct_elem3[i][j] && in_binary[x + i - halfSize][y + j - halfSize]) {
               dilatePixel = true;
-              // TODO: consider using goto here, instead of dbl break
               break; 
             }
 
           if (kernelSize == 5)
             if (struct_elem5[i][j] && in_binary[x + i - halfSize][y + j - halfSize]) {
               dilatePixel = true;
-              // TODO: consider using goto here, instead of dbl break
               break; 
             }
 
           if (kernelSize == 7)
             if (struct_elem5[i][j] && in_binary[x + i - halfSize][y + j - halfSize]) {
               dilatePixel = true;
-              // TODO: consider using goto here, instead of dbl break
               break; 
             }
 
           if (kernelSize == 9)
             if (struct_elem9[i][j] && in_binary[x + i - halfSize][y + j - halfSize]) {
               dilatePixel = true;
-              // TODO: consider using goto here, instead of dbl break
               break; 
             }
 
           if (kernelSize == 11)
             if (struct_elem11[i][j] && in_binary[x + i - halfSize][y + j - halfSize]) {
               dilatePixel = true;
-              // TODO: consider using goto here, instead of dbl break
               break; 
             }
         }
@@ -406,10 +391,6 @@ bool cell_detected_and_removed(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int 
 }
 
 void draw_detection_indication(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int x, int y, int offset) {
-  // TODO: Fix all the offset bs
-  // TODO: Faster mark? see how fast it is
-  // COULDVE: Do option for getting the silhoutte of the binary cell 
-
   int detection_indication[13][10] = {{0,1,0,0,0,0,0,0,0,0},
                                       {0,1,1,0,0,0,1,1,1,0},
                                       {0,1,1,1,0,0,0,0,1,0},
@@ -447,8 +428,6 @@ void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out
   int y_max = y_lower;
   bool y_clear_lower = true;
 
-
-  // TODO: Is extracting conditions faster than having them present in the loop?
   x_clear_lower = true;
   for (int x = x_lower; x < x_upper - (cap_width + 1); ++x) {
     x_clear_upper = true; 
@@ -506,9 +485,6 @@ void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out
   y_lower = y_min;
   y_upper = y_max + cap_width + 2; 
 
-  
-  //printf("%d\n", x_upper);
-  printf("%d\n", y_upper);
 }
 
 #if DEBUG
@@ -546,7 +522,7 @@ int main(int argc, char** argv) {
   
   // Step 2 and 3: Convert from RGB to GrayScale and apply the binary threshold to create a binary image
   // OpStep: Calculate threshold using Otsu's method.
-  //create_otsu_binary(input_image, image0_ptr);
+  // create_otsu_binary(input_image, image0_ptr);
   create_binary(input_image, image0_ptr);
 
   printf("Cell detection results:\n");
@@ -598,8 +574,7 @@ int main(int argc, char** argv) {
       write_bitmap(input_image, buffer);
     #endif
 
-    // dec the kernel size for morph
-    // TODO: do the same for the capArea if needed?
+    // Dec the kernel size for morph
     if (kernelSize == 5)
       kernelSize = 3;
     
