@@ -37,7 +37,7 @@ unsigned char (*image0_ptr)[BMP_HEIGTH] = intermedia_image0;
 unsigned char (*image1_ptr)[BMP_HEIGTH] = intermedia_image1;
 unsigned char (*tmp_ptr)[BMP_HEIGTH];
 
-clock_t startAll, endAl, startBi, endBi, startDetect, endDetect, startErode, endErode;
+clock_t startAll, endAll, startBi, endBi, startDetect, endDetect, startErode, endErode;
 
 double cpu_time_used, cpu_time_usedErosion, cpu_time_usedDetect;
 
@@ -234,6 +234,8 @@ int main(int argc, char** argv) {
 
   printf("Cell detection program - 02132 - Ass1\n");
 
+  startAll = clock();
+
   // Step 1: Load input image
   read_bitmap(argv[1], input_image);
   
@@ -241,7 +243,6 @@ int main(int argc, char** argv) {
   startBi = clock();
   create_binary(input_image, image0_ptr);
   endBi = clock();
-  cpu_time_used = endBi - startBi;
 
   // Step 4: Erode the binary image
   printf("Cell detection results:\n"); 
@@ -270,6 +271,15 @@ int main(int argc, char** argv) {
 
   // Step 7: Save output image and print results
   write_bitmap(input_image, argv[2]);
+
+  endAll = clock();
+
+  cpu_time_used = endBi - startBi;
+  printf("Binary time: %f ms\n", cpu_time_used * 1000.0 / CLOCKS_PER_SEC);
+  printf("Erosion time: %f ms\n", cpu_time_usedErosion * 1000.0 / CLOCKS_PER_SEC);
+  printf("Detection time: %f ms\n", cpu_time_usedDetect * 1000.0 / CLOCKS_PER_SEC);
+  cpu_time_used = endAll - startAll;
+  printf("Total time: %f ms\n", cpu_time_used * 1000.0 / CLOCKS_PER_SEC);
 
   printf("Done!\n");
   return 0;
