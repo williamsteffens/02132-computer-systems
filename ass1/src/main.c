@@ -340,6 +340,8 @@ bool dilate(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bi
   return wasDilated;
 }
 
+
+// Storing the new eroded and dilated image as a binary image
 bool morpher_I_barely_know_her(unsigned char binary_1[BMP_WIDTH][BMP_HEIGTH], unsigned char binary_2[BMP_WIDTH][BMP_HEIGTH], Morph_OP op, unsigned char kernelSize) {
   bool wasEroded;
   bool wasDilated;
@@ -376,6 +378,8 @@ bool morpher_I_barely_know_her(unsigned char binary_1[BMP_WIDTH][BMP_HEIGTH], un
   }
 };
 
+
+// Checks if the frame surrounding the caption area is clear of white pixels, and returns true if none is found 
 bool detection_frame_clear(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int x, int y, int totalWidth) {
   for (int i = 0; i < totalWidth; ++i) {
     if (binary[x + i][y] == 1)
@@ -391,6 +395,10 @@ bool detection_frame_clear(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int x, i
   return true; 
 }
 
+
+
+// Looks for white pixels in caption area
+// Return true if cell is detected
 bool cell_detected_and_removed(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int x, int y, int capAreaWidth) {
   bool cellDetected = false;
   
@@ -404,6 +412,9 @@ bool cell_detected_and_removed(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int 
   return cellDetected;
 }
 
+
+
+// Draw indicator over a detected cell in the output image
 void draw_detection_indication(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int x, int y, int offset) {
   int detection_indication[13][10] = {{0,1,0,0,0,0,0,0,0,0},
                                       {0,1,1,0,0,0,1,1,1,0},
@@ -429,6 +440,8 @@ void draw_detection_indication(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CH
 
 }
 
+
+// Runs through the image, and calls the functions detection_frame_clear, cell_detected_and_removed and draw_detection_indication
 void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int* cellCount, bool printCoords) {
   int cap_width = 15;
   int frame_width = 1;
@@ -442,6 +455,8 @@ void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out
   int y_max = y_lower;
   bool y_clear_lower = true;
 
+  //
+  // Printing cell location coordinates
   x_clear_lower = true;
   for (int x = x_lower; x < x_upper - (cap_width + 1); ++x) {
     x_clear_upper = true; 
@@ -459,6 +474,7 @@ void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out
         x_clear_upper = false; 
         y_clear_lower = false;
 
+        
         if (y > y_max && y > y_min) {
           y_max = y;
           #if DEBUG
