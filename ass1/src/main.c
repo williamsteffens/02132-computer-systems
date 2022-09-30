@@ -14,15 +14,7 @@ Cell counting program - Ass1
 
 
 
-// start = clock();
-// /* The code that has to be measured. */
-// end = clock();
-// cpu_time_used = end - start;
-// printf("Total time: %f ms\n", cpu_time_used * 1000.0 /
-// CLOCKS_PER_SEC);
-
-// TODO: add the above as needed, and look into macros in C
-
+// Morphologies
 typedef enum {
   erosion,
   dilation,
@@ -30,29 +22,32 @@ typedef enum {
   closing
 } Morph_OP;
 
-// TODO: add enum for drawing:)
 
+
+// Initializing variables
 unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
 #if DEBUG
   unsigned char debug_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
   char c;
 #endif
-// TODO: compress? :)
 unsigned char intermedia_image0[BMP_WIDTH][BMP_HEIGTH];
 unsigned char intermedia_image1[BMP_WIDTH][BMP_HEIGTH];
 unsigned char (*image0_ptr)[BMP_HEIGTH] = intermedia_image0;
 unsigned char (*image1_ptr)[BMP_HEIGTH] = intermedia_image1;
 unsigned char (*tmp_ptr)[BMP_HEIGTH];
 
+
 int step = 0;
 int cellCount = 0; 
 char buffer[50];
-
 int x_lower = 0;
 int x_upper = BMP_WIDTH;
 int y_lower = 0;
 int y_upper = BMP_HEIGTH; 
 
+
+
+// Predefined structuring elements/kernels
 unsigned char struct_elem3[3][3] = {{0,1,0},
                                     {1,1,1},
                                     {0,1,0}};
@@ -108,6 +103,8 @@ unsigned char struct_elem13[13][13] = {{0,0,0,0,1,1,1,1,1,0,0,0,0},
                                        {0,0,0,0,1,1,1,1,1,0,0,0,0}};  
 
 
+
+// Converting 3D rgb to 2D binary image
 void create_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char binary[BMP_WIDTH][BMP_HEIGTH]) {
   unsigned char grayVal;
   unsigned char threshold = 94;
@@ -120,7 +117,9 @@ void create_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], 
 
 }
 
-void create_otsu_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char binary[BMP_WIDTH][BMP_HEIGTH]) {
+
+// Implementation of Otsu (not used)
+/* void create_otsu_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char binary[BMP_WIDTH][BMP_HEIGTH]) {
   unsigned histogram[256] = {0};
   unsigned char grayVal;
   unsigned char max_intensity = 255;
@@ -175,8 +174,13 @@ void create_otsu_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNE
     printf("t: %d\n", threshold);
   #endif
 
-}
+} */
 
+
+
+
+// Loops through matrices and checks wether pixels are 1 or 0, if 1 --> overlay the structuring element and decide if the pixel should be eroded
+// Returns true if a pixel was eroded
 bool erode(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char kernelSize) {
   unsigned char halfSize = kernelSize >> 1;
   
@@ -199,10 +203,11 @@ bool erode(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bin
         continue;
       }
 
+      
       // Iterate over the struct_elem
       erodePixel = false; 
       for (int i = 0; i < kernelSize; ++i) {
-        for (int j = 0; j < kernelSize; ++j) {
+        for (int j = 0; j < kernelSize; ++j) 
           // Should the structing be out of bounds, assume 1 by skipping (continue) for the part that overflows
           if (x + i - halfSize < 0 || x + i - halfSize >= BMP_WIDTH || y + j - halfSize < 0 || y + j - halfSize >= BMP_HEIGTH)
             continue;
@@ -210,35 +215,31 @@ bool erode(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bin
           if (kernelSize == 3)
             if (struct_elem3[i][j] && !(in_binary[x + i - halfSize][y + j - halfSize])) {
               erodePixel = true;
-              // TODO: consider using goto here, instead of dbl break
+             
               break; 
             }
 
           if (kernelSize == 5)
             if (struct_elem5[i][j] && !(in_binary[x + i - halfSize][y + j - halfSize])) {
               erodePixel = true;
-              // TODO: consider using goto here, instead of dbl break
               break; 
             }
 
           if (kernelSize == 7)
             if (struct_elem7[i][j] && !(in_binary[x + i - halfSize][y + j - halfSize])) {
               erodePixel = true;
-              // TODO: consider using goto here, instead of dbl break
               break; 
             }
 
           if (kernelSize == 9)
             if (struct_elem9[i][j] && !(in_binary[x + i - halfSize][y + j - halfSize])) {
               erodePixel = true;
-              // TODO: consider using goto here, instead of dbl break
               break; 
             }
           
           if (kernelSize == 11)
             if (struct_elem11[i][j] && !(in_binary[x + i - halfSize][y + j - halfSize])) {
               erodePixel = true;
-              // TODO: consider using goto here, instead of dbl break
               break; 
             }
         }
@@ -258,13 +259,16 @@ bool erode(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bin
   return wasEroded; 
 }
 
+
+
+// Opposite of erosion, if pixel of interest is black, and the surrounding pixel match the structuring elements, pixelvalue changes from 0 to 1
+// Returns true if a dilation occurs
 bool dilate(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_binary[BMP_WIDTH][BMP_HEIGTH], int kernelSize) {
   unsigned char halfSize = kernelSize >> 1;
   
   
   bool dilatePixel = false;
   bool wasDilated = false; 
-  
   
   
   for (int x = 0; x < BMP_WIDTH; ++x) {
@@ -293,35 +297,30 @@ bool dilate(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bi
           if (kernelSize == 3)
             if (struct_elem3[i][j] && in_binary[x + i - halfSize][y + j - halfSize]) {
               dilatePixel = true;
-              // TODO: consider using goto here, instead of dbl break
               break; 
             }
 
           if (kernelSize == 5)
             if (struct_elem5[i][j] && in_binary[x + i - halfSize][y + j - halfSize]) {
               dilatePixel = true;
-              // TODO: consider using goto here, instead of dbl break
               break; 
             }
 
           if (kernelSize == 7)
             if (struct_elem5[i][j] && in_binary[x + i - halfSize][y + j - halfSize]) {
               dilatePixel = true;
-              // TODO: consider using goto here, instead of dbl break
               break; 
             }
 
           if (kernelSize == 9)
             if (struct_elem9[i][j] && in_binary[x + i - halfSize][y + j - halfSize]) {
               dilatePixel = true;
-              // TODO: consider using goto here, instead of dbl break
               break; 
             }
 
           if (kernelSize == 11)
             if (struct_elem11[i][j] && in_binary[x + i - halfSize][y + j - halfSize]) {
               dilatePixel = true;
-              // TODO: consider using goto here, instead of dbl break
               break; 
             }
         }
