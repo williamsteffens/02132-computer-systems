@@ -2,7 +2,7 @@
 Cell counting program - Ass1
 */
 
-#define DEBUG 1
+#define DEBUG 0
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -37,6 +37,9 @@ unsigned char (*image0_ptr)[BMP_HEIGTH] = intermedia_image0;
 unsigned char (*image1_ptr)[BMP_HEIGTH] = intermedia_image1;
 unsigned char (*tmp_ptr)[BMP_HEIGTH];
 
+clock_t startAll, endAll, startBi, endBi, startErode, endErode, startDilation, endDilation,
+  startOpening, endOpening, startClosing, endClosing, startDetectCells, endDetectCells;
+double cpu_time_used, cpu_time_usedErode, cpu_time_usedDilation, cpu_time_usedOpening, cpu_time_usedClosing, cpu_time_usedDetection;
 
 int step = 0;
 int cellCount = 0; 
@@ -118,7 +121,6 @@ void create_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], 
 
 }
 
-
 // Implementation of Otsu (not used)
 /* void create_otsu_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char binary[BMP_WIDTH][BMP_HEIGTH]) {
   unsigned histogram[256] = {0};
@@ -177,9 +179,6 @@ void create_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], 
 
 } */
 
-
-
-
 // Loops through matrices and checks wether pixels are 1 or 0, if 1 --> overlay the structuring element and decide if the pixel should be eroded
 // Returns true if a pixel was eroded
 bool erode(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char kernelSize) {
@@ -189,8 +188,8 @@ bool erode(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bin
   bool erodePixel = false;
 
 
-  for (int x = 0; x < BMP_WIDTH; ++x) {
-    for (int y = 0; y < BMP_HEIGTH; ++y) {
+  for (int x = x_lower; x < x_upper; ++x) {
+    for (int y = y_lower; y < y_upper; ++y) {
 
       // Should only erode if the pixel is white; skip black
       if (in_binary[x][y] == 0) {
@@ -259,8 +258,6 @@ bool erode(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bin
   return wasEroded; 
 }
 
-
-
 // Opposite of erosion, if pixel of interest is black, and the surrounding pixel match the structuring elements, pixelvalue changes from 0 to 1
 // Returns true if a dilation occurs
 bool dilate(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_binary[BMP_WIDTH][BMP_HEIGTH], int kernelSize) {
@@ -271,8 +268,8 @@ bool dilate(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bi
   bool wasDilated = false; 
   
   
-  for (int x = 0; x < BMP_WIDTH; ++x) {
-    for (int y = 0; y < BMP_HEIGTH; ++y) {
+  for (int x = x_lower; x < y_lower; ++x) {
+    for (int y = y_lower; y < y_upper; ++y) {
 
       // Should only dialte if the pixel is black; skip white
       if (in_binary[x][y] == 1) {
@@ -340,7 +337,6 @@ bool dilate(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bi
   return wasDilated;
 }
 
-
 // Storing the new eroded and dilated image as a binary image
 bool morpher_I_barely_know_her(unsigned char binary_1[BMP_WIDTH][BMP_HEIGTH], unsigned char binary_2[BMP_WIDTH][BMP_HEIGTH], Morph_OP op, unsigned char kernelSize) {
   bool wasEroded;
@@ -356,16 +352,38 @@ bool morpher_I_barely_know_her(unsigned char binary_1[BMP_WIDTH][BMP_HEIGTH], un
       break; 
 
     case opening:
+      startOpening = clock();
+      startErode = clock();
+
       wasEroded = erode(binary_1, binary_2, kernelSize);
+      
+      endErode = clock();
+      startDilation = clock();
+
       wasDilated = dilate(binary_2, binary_1, kernelSize);
+      
+      endDilation = clock();
+      endOpening = clock();
+
+      cpu_time_usedErode += endErode - startErode;
+      cpu_time_usedDilation += endDilation - startDilation;
+      cpu_time_usedOpening += endOpening - startOpening;  
+
       // Make the binary_2 point to the binary_1 image
       binary_2 = binary_1;
       return wasEroded || wasDilated;
       break;
 
     case closing:
+      startClosing = clock();
+
       wasDilated = dilate(binary_1, binary_2, kernelSize);
       wasEroded = erode(binary_2, binary_1, kernelSize);
+
+      endClosing = clock();
+
+      cpu_time_usedClosing += endClosing - startClosing; 
+
       // Make the binary_2 point to the binary_1 image
       binary_2 = binary_1;
       return wasDilated || wasEroded;
@@ -377,7 +395,6 @@ bool morpher_I_barely_know_her(unsigned char binary_1[BMP_WIDTH][BMP_HEIGTH], un
       break;
   }
 };
-
 
 // Checks if the frame surrounding the caption area is clear of white pixels, and returns true if none is found 
 bool detection_frame_clear(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int x, int y, int totalWidth) {
@@ -395,8 +412,6 @@ bool detection_frame_clear(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int x, i
   return true; 
 }
 
-
-
 // Looks for white pixels in caption area
 // Return true if cell is detected
 bool cell_detected_and_removed(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int x, int y, int capAreaWidth) {
@@ -411,8 +426,6 @@ bool cell_detected_and_removed(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int 
 
   return cellDetected;
 }
-
-
 
 // Draw indicator over a detected cell in the output image
 void draw_detection_indication(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int x, int y, int offset) {
@@ -439,7 +452,6 @@ void draw_detection_indication(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CH
       }
 
 }
-
 
 // Runs through the image, and calls the functions detection_frame_clear, cell_detected_and_removed and draw_detection_indication
 // Printing cell location coordinates
@@ -538,6 +550,7 @@ void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out
 #endif
 
 
+
 int main(int argc, char** argv) {
 
   if (argc != 3) {
@@ -547,13 +560,16 @@ int main(int argc, char** argv) {
 
   printf("Cell detection program - 02132 - Ass1\n");
 
+  startAll = clock();
   // Step 1: Load input image
   read_bitmap(argv[1], input_image);
   
   // Step 2 and 3: Convert from RGB to GrayScale and apply the binary threshold to create a binary image
   // OpStep: Calculate threshold using Otsu's method.
   // create_otsu_binary(input_image, image0_ptr);
+  startBi = clock();
   create_binary(input_image, image0_ptr);
+  endBi = clock();
 
   printf("Cell detection results:\n");
 
@@ -575,7 +591,11 @@ int main(int argc, char** argv) {
       write_bitmap(debug_image, buffer);
   #endif
 
+  startDetectCells = clock();
   detect_cells(image0_ptr, input_image, &cellCount, false);
+  endDetectCells = clock();
+  
+  cpu_time_usedDetection += endDetectCells - startDetectCells;
 
   // Output first detection step for debugging
   #if DEBUG
@@ -596,7 +616,11 @@ int main(int argc, char** argv) {
     #endif
 
     // Step 5 and 6: Detect cells and generate output image
+    startDetectCells = clock();
     detect_cells(image1_ptr, input_image, &cellCount, false);
+    endDetectCells = clock();
+
+    cpu_time_usedDetection += endDetectCells - startDetectCells;
 
     // Output steps on the final image
     #if DEBUG
@@ -621,6 +645,21 @@ int main(int argc, char** argv) {
 
   // Step 7: Save output image and print results
   write_bitmap(input_image, argv[2]);
+
+
+
+  endAll = clock();
+  cpu_time_used = endBi - startBi;
+  printf("Binary time: %f ms\n", cpu_time_used * 1000.0 / CLOCKS_PER_SEC);
+  printf("Erosion time: %f ms\n", cpu_time_usedErode * 1000.0 / CLOCKS_PER_SEC);
+  printf("Dilation time: %f ms\n", cpu_time_usedDilation * 1000.0 / CLOCKS_PER_SEC);
+  printf("Opening time: %f ms\n", cpu_time_usedOpening * 1000.0 / CLOCKS_PER_SEC);
+  printf("Closing time: %f ms\n", cpu_time_usedClosing * 1000.0 / CLOCKS_PER_SEC);
+  printf("Detection time: %f ms\n", cpu_time_usedDetection * 1000.0 / CLOCKS_PER_SEC);
+  cpu_time_used = endAll - startAll;
+  printf("Total time: %f ms\n", cpu_time_used * 1000.0 / CLOCKS_PER_SEC);
+
+
 
   printf("Done!\n");
 
