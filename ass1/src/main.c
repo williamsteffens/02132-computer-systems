@@ -207,7 +207,7 @@ bool erode(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bin
       // Iterate over the struct_elem
       erodePixel = false; 
       for (int i = 0; i < kernelSize; ++i) {
-        for (int j = 0; j < kernelSize; ++j) 
+        for (int j = 0; j < kernelSize; ++j) {
           // Should the structing be out of bounds, assume 1 by skipping (continue) for the part that overflows
           if (x + i - halfSize < 0 || x + i - halfSize >= BMP_WIDTH || y + j - halfSize < 0 || y + j - halfSize >= BMP_HEIGTH)
             continue;
