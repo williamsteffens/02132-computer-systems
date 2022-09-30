@@ -37,6 +37,11 @@ unsigned char (*image0_ptr)[BMP_HEIGTH] = intermedia_image0;
 unsigned char (*image1_ptr)[BMP_HEIGTH] = intermedia_image1;
 unsigned char (*tmp_ptr)[BMP_HEIGTH];
 
+clock_t startAll, endAl, startBi, endBi, startDetect, endDetect, startErode, endErode;
+
+double cpu_time_used, cpu_time_usedErosion, cpu_time_usedDetect;
+
+
 int step = 0;
 int cellCount = 0; 
 char buffer[50];
@@ -64,6 +69,7 @@ void create_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], 
 }
 
 bool erode(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_binary[BMP_WIDTH][BMP_HEIGTH]) {
+  startErode = clock();
   unsigned char structing_element[3][3] = {{0,1,0},{1,1,1},{0,1,0}};
   bool wasEroded = false;
   bool erodePixel;
@@ -101,6 +107,8 @@ bool erode(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bin
       }
     }
   }
+  endErode = clock();
+  cpu_time_usedErosion += endErode - startErode; 
 
   return wasEroded; 
 }
@@ -219,7 +227,6 @@ void binary_to_BMP(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char BM
 
 
 int main(int argc, char** argv) {
-
   if (argc != 3) {
       fprintf(stderr, "Usage: %s <input file path> <output file path>\n", argv[0]);
       exit(1);
@@ -231,15 +238,13 @@ int main(int argc, char** argv) {
   read_bitmap(argv[1], input_image);
   
   // Step 2 and 3: Convert from RGB to GrayScale and apply the binary threshold to create a binary image
+  startBi = clock();
   create_binary(input_image, image0_ptr);
+  endBi = clock();
+  cpu_time_used = endBi - startBi;
 
-  // TODO: Why erode the image first? Shouldn't we detect the cells we can and then erode? or are we trying to get rid of noise? 
   // Step 4: Erode the binary image
-  printf("Cell detection results:\n");
-
-
-  // TODO: MAKE THE DETECITON FRAME TRUE 
-
+  printf("Cell detection results:\n"); 
 
   while(erode(image0_ptr, image1_ptr)) {
     // print morph steps for debugging
@@ -250,7 +255,10 @@ int main(int argc, char** argv) {
     #endif
 
     // Step 5 and 6: Detect cells and generate output image
+    startDetect = clock();
     detect_cells(image1_ptr, input_image, &cellCount, false);
+    endDetect = clock();
+    cpu_time_usedDetect += endDetect - startDetect;
 
     // Swap ptr for the intermedia images
     tmp_ptr = image0_ptr;
