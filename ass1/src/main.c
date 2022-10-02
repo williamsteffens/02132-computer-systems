@@ -268,7 +268,7 @@ bool dilate(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bi
   bool wasDilated = false; 
   
   
-  for (int x = x_lower; x < y_lower; ++x) {
+  for (int x = x_lower; x < x_upper; ++x) {
     for (int y = y_lower; y < y_upper; ++y) {
 
       // Should only dialte if the pixel is black; skip white
