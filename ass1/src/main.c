@@ -2,7 +2,7 @@
 Cell counting program - Ass1
 */
 
-#define DEBUG 0
+#define DEBUG 1
 
 #include <stdlib.h>
 #include <stdio.h>
