@@ -111,18 +111,19 @@ unsigned char struct_elem13[13][13] = {{0,0,0,0,1,1,1,1,1,0,0,0,0},
 // Converting 3D rgb to 2D binary image
 void create_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char binary[BMP_WIDTH][BMP_HEIGTH]) {
   unsigned char grayVal;
-  unsigned char threshold = 94;
+  unsigned short threshold = 94;
 
   for (int x = 0; x < BMP_WIDTH; ++x)
     for (int y = 0; y < BMP_HEIGTH; ++y) {
-      grayVal = (unsigned char) (0.299 * in_image[x][y][0] + 0.587 * in_image[x][y][1] + 0.114 * in_image[x][y][2]);
+      //grayVal = (in_image[x][y][0] + in_image[x][y][1] + in_image[x][y][2]) / 3;
+      grayVal = (0.299 * in_image[x][y][0] + 0.587 * in_image[x][y][1] + 0.114 * in_image[x][y][2]);
       binary[x][y] = grayVal > threshold ? 1 : 0;
     }
 
 }
 
 // Implementation of Otsu (not used)
-/* void create_otsu_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char binary[BMP_WIDTH][BMP_HEIGTH]) {
+void create_otsu_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char binary[BMP_WIDTH][BMP_HEIGTH]) {
   unsigned histogram[256] = {0};
   unsigned char grayVal;
   unsigned char max_intensity = 255;
@@ -177,7 +178,7 @@ void create_binary(unsigned char in_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], 
     printf("t: %d\n", threshold);
   #endif
 
-} */
+}
 
 // Loops through matrices and checks wether pixels are 1 or 0, if 1 --> overlay the structuring element and decide if the pixel should be eroded
 // Returns true if a pixel was eroded
@@ -188,8 +189,8 @@ bool erode(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bin
   bool erodePixel = false;
 
 
-  for (int x = x_lower; x < x_upper; ++x) {
-    for (int y = y_lower; y < y_upper; ++y) {
+  for (int x = 0; x < BMP_WIDTH; ++x) {
+    for (int y = 0; y < BMP_HEIGTH; ++y) {
 
       // Should only erode if the pixel is white; skip black
       if (in_binary[x][y] == 0) {
@@ -268,8 +269,8 @@ bool dilate(unsigned char in_binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out_bi
   bool wasDilated = false; 
   
   
-  for (int x = x_lower; x < x_upper; ++x) {
-    for (int y = y_lower; y < y_upper; ++y) {
+  for (int x = 0; x < BMP_WIDTH; ++x) {
+    for (int y = 0; y < BMP_HEIGTH; ++y) {
 
       // Should only dialte if the pixel is black; skip white
       if (in_binary[x][y] == 1) {
@@ -377,11 +378,18 @@ bool morpher_I_barely_know_her(unsigned char binary_1[BMP_WIDTH][BMP_HEIGTH], un
     case closing:
       startClosing = clock();
 
+      startDilation = clock();
       wasDilated = dilate(binary_1, binary_2, kernelSize);
+      endDilation = clock();
+
+      startErode = clock();
       wasEroded = erode(binary_2, binary_1, kernelSize);
+      endErode = clock();
 
       endClosing = clock();
 
+      cpu_time_usedErode += endErode - startErode;
+      cpu_time_usedDilation += endDilation - startDilation;
       cpu_time_usedClosing += endClosing - startClosing; 
 
       // Make the binary_2 point to the binary_1 image
@@ -429,7 +437,7 @@ bool cell_detected_and_removed(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], int 
 
 // Draw indicator over a detected cell in the output image
 void draw_detection_indication(unsigned char image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int x, int y, int offset) {
-  int detection_indication[13][10] = {{0,1,0,0,0,0,0,0,0,0},
+  unsigned char detection_indication[13][10] = {{0,1,0,0,0,0,0,0,0,0},
                                       {0,1,1,0,0,0,1,1,1,0},
                                       {0,1,1,1,0,0,0,0,1,0},
                                       {0,1,1,1,0,0,0,0,1,0},
@@ -460,73 +468,15 @@ void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out
   int cap_width = 15;
   int frame_width = 1;
 
-  int x_min = x_lower;
-  int x_max = x_upper;
-  bool x_clear_lower = true;
-  bool x_clear_upper = true; 
-
-  int y_min = y_upper;
-  int y_max = y_lower;
-  bool y_clear_lower = true;
-
-  
-  x_clear_lower = true;
-  for (int x = x_lower; x < x_upper - (cap_width + 1); ++x) {
-    x_clear_upper = true; 
-    y_clear_lower = true;
-    for (int y = y_lower; y < y_upper - (cap_width + 1); ++y) {
-      if (detection_frame_clear(binary, x, y, cap_width + (frame_width << 1))) {
+  for (int x = 0; x < BMP_WIDTH - (cap_width + 1); ++x)
+    for (int y = 0; y < BMP_HEIGTH - (cap_width + 1); ++y)
+      if (detection_frame_clear(binary, x, y, cap_width + (frame_width << 1))) 
         if (cell_detected_and_removed(binary, x, y, cap_width)) {
           draw_detection_indication(out_image, x, y, cap_width >> 2);
           ++*cellCount;
           if (printCoords)  
             printf("\tcell #%d: (%d, %d)\n", *cellCount, x + (cap_width >> 1), y + (cap_width >> 1));
         }
-      } else {
-        x_clear_lower = false;
-        x_clear_upper = false; 
-        y_clear_lower = false;
-
-        if (y > y_max && y > y_min) {
-          y_max = y;
-          #if DEBUG
-            out_image[x][y][1] = 255;
-            out_image[x][y][2] = 255;
-          #endif    
-        }
-      }
-
-      if (!y_clear_lower && y < y_min) {
-        y_min = y;
-        #if DEBUG
-          out_image[x][y][0] = 255;
-          out_image[x][y][2] = 255;
-        #endif
-      }
-    }
-
-    if (x_clear_lower) {
-      ++x_min;
-      #if DEBUG
-        out_image[x_min][0][1] = 255; 
-      #endif  
-    }
-
-    if (!x_clear_upper && x > x_min) {
-      x_max = x;
-    }
-  }
-
-  #if DEBUG
-    out_image[x_max][0][2] = 255;
-  #endif
-
-  x_lower = x_min;
-  x_upper = x_max + cap_width + 2;;
-
-  y_lower = y_min;
-  y_upper = y_max + cap_width + 2; 
-
 }
 
 #if DEBUG
@@ -547,6 +497,19 @@ void detect_cells(unsigned char binary[BMP_WIDTH][BMP_HEIGTH], unsigned char out
         //}
 
   }
+
+  void RGB_to_GRAYSCALE(unsigned char BMP[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char grayscale[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS]) {
+    unsigned char grayVal;
+  
+    for (int x = 0; x < BMP_WIDTH; ++x)
+      for (int y = 0; y < BMP_HEIGTH; ++y) {
+        //grayVal = (unsigned char) (0.299 * BMP[x][y][0] + 0.587 * BMP[x][y][1] + 0.114 * BMP[x][y][2]);
+        grayVal = (unsigned char) (BMP[x][y][0] + BMP[x][y][1] + BMP[x][y][2]) / 3;
+        for (int c = 0; c < BMP_CHANNELS; ++c)
+          grayscale[x][y][c] = grayVal;
+      }
+
+  }
 #endif
 
 
@@ -564,10 +527,16 @@ int main(int argc, char** argv) {
   // Step 1: Load input image
   read_bitmap(argv[1], input_image);
   
+  #if DEBUG
+    RGB_to_GRAYSCALE(input_image, debug_image);
+    write_bitmap(debug_image, argv[2]);
+  #endif
+
   // Step 2 and 3: Convert from RGB to GrayScale and apply the binary threshold to create a binary image
   // OpStep: Calculate threshold using Otsu's method.
   // create_otsu_binary(input_image, image0_ptr);
   startBi = clock();
+  //create_otsu_binary(input_image, image0_ptr);
   create_binary(input_image, image0_ptr);
   endBi = clock();
 
