@@ -5,15 +5,15 @@ circuit ProgramCounter :
     input reset : UInt<1>
     output io : {flip stop : UInt<1>, flip jump : UInt<1>, flip run : UInt<1>, flip programCounterJump : UInt<16>, programCounter : UInt<16>}
     
-    reg PCReg : UInt<16>, clock with : (reset => (reset, UInt<16>("h00"))) @[ProgramCounter.scala 14:22]
+    reg PCReg : UInt<16>, clock with : (reset => (reset, UInt<16>("h00"))) @[ProgramCounter.scala 14:28]
     wire runStopLogic : UInt<1>
     runStopLogic <= UInt<1>("h00")
     node _T = not(io.run) @[ProgramCounter.scala 17:29]
     node _T_1 = or(io.stop, _T) @[ProgramCounter.scala 17:27]
     runStopLogic <= _T_1 @[ProgramCounter.scala 17:16]
-    when runStopLogic : @[ProgramCounter.scala 20:22]
+    when runStopLogic : @[ProgramCounter.scala 20:23]
       PCReg <= PCReg @[ProgramCounter.scala 21:11]
-      skip @[ProgramCounter.scala 20:22]
+      skip @[ProgramCounter.scala 20:23]
     else : @[ProgramCounter.scala 22:25]
       when io.jump : @[ProgramCounter.scala 22:25]
         PCReg <= io.programCounterJump @[ProgramCounter.scala 23:11]

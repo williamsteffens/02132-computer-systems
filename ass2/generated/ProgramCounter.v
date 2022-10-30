@@ -10,7 +10,7 @@ module ProgramCounter(
 `ifdef RANDOMIZE_REG_INIT
   reg [31:0] _RAND_0;
 `endif // RANDOMIZE_REG_INIT
-  reg [15:0] PCReg; // @[ProgramCounter.scala 14:22]
+  reg [15:0] PCReg; // @[ProgramCounter.scala 14:28]
   wire  _T = ~io_run; // @[ProgramCounter.scala 17:29]
   wire  runStopLogic = io_stop | _T; // @[ProgramCounter.scala 17:27]
   wire [15:0] _T_3 = PCReg + 16'h1; // @[ProgramCounter.scala 25:20]

@@ -1,0 +1,46 @@
+[
+  {
+    "class":"firrtl.transforms.CombinationalPath",
+    "sink":"~ALU|ALU>io_cmpResult",
+    "sources":[
+      "~ALU|ALU>io_sel",
+      "~ALU|ALU>io_op1",
+      "~ALU|ALU>io_op2"
+    ]
+  },
+  {
+    "class":"firrtl.transforms.CombinationalPath",
+    "sink":"~ALU|ALU>io_result",
+    "sources":[
+      "~ALU|ALU>io_sel",
+      "~ALU|ALU>io_op1",
+      "~ALU|ALU>io_op2"
+    ]
+  },
+  {
+    "class":"logger.LogLevelAnnotation",
+    "globalLogLevel":{
+      
+    }
+  },
+  {
+    "class":"firrtl.options.TargetDirAnnotation",
+    "directory":"generated"
+  },
+  {
+    "class":"firrtl.stage.phases.DriverCompatibility$TopNameAnnotation",
+    "topName":"ALU"
+  },
+  {
+    "class":"firrtl.options.OutputAnnotationFileAnnotation",
+    "file":"ALU"
+  },
+  {
+    "class":"firrtl.EmitCircuitAnnotation",
+    "emitter":"firrtl.VerilogEmitter"
+  },
+  {
+    "class":"firrtl.transforms.BlackBoxTargetDirAnno",
+    "targetDir":"generated"
+  }
+]

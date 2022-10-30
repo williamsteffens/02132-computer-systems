@@ -11,6 +11,7 @@ class ControlUnit extends Module {
     val immediateOp = Output(Bool())
     val immediateAddr = Output(Bool())
     val immediateRegWrite = Output(Bool())
+    val writeSelI = Output(Bool())
     val stop = Output(Bool())
   })
 
@@ -52,6 +53,7 @@ class ControlUnit extends Module {
 
       // I-type
       is ("b01".U) {
+        io.writeSelI := true.B
         // Operation
         switch (io.opcode(29,28)) {
           is ("b00".U) {
