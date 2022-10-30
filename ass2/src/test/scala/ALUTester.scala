@@ -8,54 +8,142 @@ class ALUTester(dut: ALU) extends PeekPokeTester(dut) {
   poke(dut.io.op1, 2)
   poke(dut.io.op2, 2)
   expect(dut.io.result, 4)
-  step(1)
-
-  // Sub
-
-
-
-
-
-
-
-
-  /*
-  //Program Counter running for 5 clock cycles
-  poke(dut.io.jump, false)
-  poke(dut.io.run, true)
-  poke(dut.io.stop, false)
-  poke(dut.io.programCounterJump, 0)
   step(5)
 
-  //Hold for 5 clock cycles
-  poke(dut.io.jump, false)
-  poke(dut.io.run, true)
-  poke(dut.io.stop, true)
-  poke(dut.io.programCounterJump, 0)
+  // Subtract operation, 6-3 = 3
+  poke(dut.io.sel, 1)
+  poke(dut.io.op1, 6)
+  poke(dut.io.op2, 3)
+  expect(dut.io.result, 3)
   step(5)
 
-  //Hold for 5 clock cycles
-  poke(dut.io.jump, false)
-  poke(dut.io.run, false)
-  poke(dut.io.stop, false)
-  poke(dut.io.programCounterJump, 0)
+  // Multiplikaiton operation, 3*3=6
+  poke(dut.io.sel, 2)
+  poke(dut.io.op1, 3)
+  poke(dut.io.op2, 3)
+  expect(dut.io.result, 6)
   step(5)
 
-  //Load the value 30
-  poke(dut.io.jump, true)
-  poke(dut.io.run, true)
-  poke(dut.io.stop, false)
-  poke(dut.io.programCounterJump, 30)
-  step(1)
-
-  //Program Counter running for another 5 clock cycles
-  poke(dut.io.jump, false)
-  poke(dut.io.run, true)
-  poke(dut.io.stop, false)
-  poke(dut.io.programCounterJump, 0)
+  // Increment operation, 4+1=5
+  poke(dut.io.sel, 3)
+  poke(dut.io.op1, 4)
+  poke(dut.io.op2, 10)
+  expect(dut.io.result, 5)
   step(5)
 
-  */
+  // Decrement operation, 3-1=2
+  poke(dut.io.sel, 4)
+  poke(dut.io.op1, 3)
+  poke(dut.io.op2, 10)
+  expect(dut.io.result, 2)
+  step(5)
+
+  // Bitwise not operation, 
+  poke(dut.io.sel, 5)
+  poke(dut.io.op1, 5)
+  poke(dut.io.op2, 10)
+  expect(dut.io.result, -6)
+  step(5)
+
+  // Bitwise AND operation, 9 & 14 = 8
+  poke(dut.io.sel, 6)
+  poke(dut.io.op1, 9)
+  poke(dut.io.op2, 14)
+  expect(dut.io.result, 8)
+  step(5)
+
+  // Bitwise OR operation, 9 | 14 = 15
+  poke(dut.io.sel, 7)
+  poke(dut.io.op1, 9)
+  poke(dut.io.op2, 14)
+  expect(dut.io.result, 15)
+  step(5)
+
+  // Bitwise XOR operation, 9 ^ 14 = 7
+  poke(dut.io.sel, 8)
+  poke(dut.io.op1, 9)
+  poke(dut.io.op2, 14)
+  expect(dut.io.result, 7)
+  step(5)
+
+  // Equality operation, 4 == 4 = true
+  poke(dut.io.sel, 9)
+  poke(dut.io.op1, 4)
+  poke(dut.io.op2, 4)
+  expect(dut.io.result, true.B)
+  step(5)
+  // Equality operation, 4 == 5 = false
+  poke(dut.io.sel, 9)
+  poke(dut.io.op1, 4)
+  poke(dut.io.op2, 5)
+  expect(dut.io.result, false.B)
+  step(5)
+
+  // Inequality operation, 6=/=1 = true
+  poke(dut.io.sel, 10)
+  poke(dut.io.op1, 6)
+  poke(dut.io.op2, 1)
+  expect(dut.io.result, true.B)
+  step(5)
+  // Inequality operation, 6=/=6 = false
+  poke(dut.io.sel, 10)
+  poke(dut.io.op1, 6)
+  poke(dut.io.op2, 6)
+  expect(dut.io.result, false.B)
+  step(5)
+
+  // Greater than oparetion, 8>7 = true
+  poke(dut.io.sel, 11)
+  poke(dut.io.op1, 8)
+  poke(dut.io.op2, 7)
+  expect(dut.io.result, true.B)
+  step(5)
+  // Greater than oparetion, 8>8 = false
+  poke(dut.io.sel, 11)
+  poke(dut.io.op1, 8)
+  poke(dut.io.op2, 8)
+  expect(dut.io.result, false.B)
+  step(5)
+
+  // Greater than or equal operation, 7>=7 = true
+  poke(dut.io.sel, 12)
+  poke(dut.io.op1, 7)
+  poke(dut.io.op2, 7)
+  expect(dut.io.result, true.B)
+  step(5)
+  // Greater than or equal operation, 7>=8 = false
+  poke(dut.io.sel, 12)
+  poke(dut.io.op1, 7)
+  poke(dut.io.op2, 8)
+  expect(dut.io.result, false.B)
+  step(5)
+
+  // Less than operation, 3<4 = true
+  poke(dut.io.sel, 13)
+  poke(dut.io.op1, 3)
+  poke(dut.io.op2, 4)
+  expect(dut.io.result, true)
+  step(5)
+  // Less than operation, 3<2 = false
+  poke(dut.io.sel, 13)
+  poke(dut.io.op1, 3)
+  poke(dut.io.op2, 4)
+  expect(dut.io.result, true)
+  step(5)
+
+  // Less than or equall operation, 3<=3 = true
+  poke(dut.io.sel, 14)
+  poke(dut.io.op1, 3)
+  poke(dut.io.op2, 3)
+  expect(dut.io.result, true.B)
+  step(5)
+  // Less than or equall operation, 3<=1 = true
+  poke(dut.io.sel, 14)
+  poke(dut.io.op1, 3)
+  poke(dut.io.op2, 1)
+  expect(dut.io.result, false.B)
+  step(5)
+
 }
 
 object ALUTester {
