@@ -2,27 +2,27 @@
 [0m[[0m[0mdebug[0m] [0m[0mIncrementalCompile.incrementalCompile[0m
 [0m[[0m[0mdebug[0m] [0m[0mprevious = Stamps for: 12 products, 6 sources, 3 libraries[0m
 [0m[[0m[0mdebug[0m] [0m[0mcurrent source = Set(${BASE}/src/test/scala/ProgramCounterTester.scala, ${BASE}/src/test/scala/HelloTester.scala, ${BASE}/src/test/scala/CPUTopTester.scala, ${BASE}/src/test/scala/Images.scala, ${BASE}/src/test/scala/Programs.scala, ${BASE}/src/test/scala/ALUTester.scala)[0m
-[0m[[0m[0mdebug[0m] [0m[0m> initialChanges = InitialChanges(Changes(added = Set(), removed = Set(), changed = Set(${BASE}/src/test/scala/Programs.scala), unmodified = ...),Set(),Set(),API Changes: Set())[0m
+[0m[[0m[0mdebug[0m] [0m[0m> initialChanges = InitialChanges(Changes(added = Set(), removed = Set(), changed = Set(${BASE}/src/test/scala/Images.scala), unmodified = ...),Set(),Set(),API Changes: Set())[0m
 [0m[[0m[0mdebug[0m] [0m[0m[0m
 [0m[[0m[0mdebug[0m] [0m[0mInitial source changes:[0m
 [0m[[0m[0mdebug[0m] [0m[0m	removed: Set()[0m
 [0m[[0m[0mdebug[0m] [0m[0m	added: Set()[0m
-[0m[[0m[0mdebug[0m] [0m[0m	modified: Set(${BASE}/src/test/scala/Programs.scala)[0m
+[0m[[0m[0mdebug[0m] [0m[0m	modified: Set(${BASE}/src/test/scala/Images.scala)[0m
 [0m[[0m[0mdebug[0m] [0m[0mInvalidated products: Set()[0m
 [0m[[0m[0mdebug[0m] [0m[0mExternal API changes: API Changes: Set()[0m
 [0m[[0m[0mdebug[0m] [0m[0mModified binary dependencies: Set()[0m
-[0m[[0m[0mdebug[0m] [0m[0mInitial directly invalidated classes: Set(Programs)[0m
+[0m[[0m[0mdebug[0m] [0m[0mInitial directly invalidated classes: Set(Images)[0m
 [0m[[0m[0mdebug[0m] [0m[0mSources indirectly invalidated by:[0m
 [0m[[0m[0mdebug[0m] [0m[0m	product: Set()[0m
 [0m[[0m[0mdebug[0m] [0m[0m	binary dep: Set()[0m
 [0m[[0m[0mdebug[0m] [0m[0m	external source: Set()[0m
-[0m[[0m[0mdebug[0m] [0m[0mAll initially invalidated classes: Set(Programs)[0m
-[0m[[0m[0mdebug[0m] [0m[0mAll initially invalidated sources:Set(${BASE}/src/test/scala/Programs.scala)[0m
-[0m[[0m[0mdebug[0m] [0m[0mInitial set of included nodes: Programs[0m
+[0m[[0m[0mdebug[0m] [0m[0mAll initially invalidated classes: Set(Images)[0m
+[0m[[0m[0mdebug[0m] [0m[0mAll initially invalidated sources:Set(${BASE}/src/test/scala/Images.scala)[0m
+[0m[[0m[0mdebug[0m] [0m[0mInitial set of included nodes: Images[0m
 [0m[[0m[0mdebug[0m] [0m[0mcompilation cycle 1[0m
 [0m[[0m[0minfo[0m] [0m[0mcompiling 1 Scala source to C:\Users\William\Desktop\02132-computer-systems\CompSys02132\ass2\target\scala-2.12\test-classes ...[0m
 [0m[[0m[0mdebug[0m] [0m[0mGetting org.scala-sbt:compiler-bridge_2.12:1.5.7:compile for Scala 2.12.8[0m
-[0m[[0m[0mdebug[0m] [0m[0m[zinc] Running cached compiler 5162756d for Scala compiler version 2.12.8[0m
+[0m[[0m[0mdebug[0m] [0m[0m[zinc] Running cached compiler 184a58a6 for Scala compiler version 2.12.8[0m
 [0m[[0m[0mdebug[0m] [0m[0m[zinc] The Scala compiler is invoked with:[0m
 [0m[[0m[0mdebug[0m] [0m[0m	-Xsource:2.11[0m
 [0m[[0m[0mdebug[0m] [0m[0m	-bootclasspath[0m
@@ -35,5 +35,5 @@
 [0m[[0m[0mdebug[0m] [0m[0mFinal step, transitive dependencies:[0m
 [0m[[0m[0mdebug[0m] [0m[0m	Set()[0m
 [0m[[0m[0mdebug[0m] [0m[0mNo classes were invalidated.[0m
-[0m[[0m[0mdebug[0m] [0m[0mScala compilation took 3.290248 s[0m
+[0m[[0m[0mdebug[0m] [0m[0mScala compilation took 3.6991126 s[0m
 [0m[[0m[0mdebug[0m] [0m[0mdone compiling[0m

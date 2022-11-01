@@ -103,7 +103,7 @@ object Images{
       for( x <- 0 to 19) {
         if(image.get(x+20*y) == 0){
           //System.out.print(0x25A0.toChar + "  ")
-          System.out.print("~ ")
+          System.out.print("- ")
         }else if(image.get(x+20*y) == 255){
           //System.out.print(0x25A1.toChar + "  ")
           System.out.print("@ ")
