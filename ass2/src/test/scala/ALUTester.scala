@@ -38,7 +38,7 @@ class ALUTester(dut: ALU) extends PeekPokeTester(dut) {
   expect(dut.io.result, 2)
   step(5)
 
-  // Bitwise not operation, 
+  // Bitwise NOT operation,
   poke(dut.io.sel, 5)
   poke(dut.io.op1, 5)
   poke(dut.io.op2, 10)
@@ -70,52 +70,52 @@ class ALUTester(dut: ALU) extends PeekPokeTester(dut) {
   poke(dut.io.sel, 9)
   poke(dut.io.op1, 4)
   poke(dut.io.op2, 4)
-  expect(dut.io.result, true.B)
+  expect(dut.io.result, true)
   step(5)
   // Equality operation, 4 == 5 = false
   poke(dut.io.sel, 9)
   poke(dut.io.op1, 4)
   poke(dut.io.op2, 5)
-  expect(dut.io.result, false.B)
+  expect(dut.io.result, false)
   step(5)
 
   // Inequality operation, 6=/=1 = true
   poke(dut.io.sel, 10)
   poke(dut.io.op1, 6)
   poke(dut.io.op2, 1)
-  expect(dut.io.result, true.B)
+  expect(dut.io.result, true)
   step(5)
   // Inequality operation, 6=/=6 = false
   poke(dut.io.sel, 10)
   poke(dut.io.op1, 6)
   poke(dut.io.op2, 6)
-  expect(dut.io.result, false.B)
+  expect(dut.io.result, false)
   step(5)
 
   // Greater than oparetion, 8>7 = true
   poke(dut.io.sel, 11)
   poke(dut.io.op1, 8)
   poke(dut.io.op2, 7)
-  expect(dut.io.result, true.B)
+  expect(dut.io.result, true)
   step(5)
   // Greater than oparetion, 8>8 = false
   poke(dut.io.sel, 11)
   poke(dut.io.op1, 8)
   poke(dut.io.op2, 8)
-  expect(dut.io.result, false.B)
+  expect(dut.io.result, false)
   step(5)
 
   // Greater than or equal operation, 7>=7 = true
   poke(dut.io.sel, 12)
   poke(dut.io.op1, 7)
   poke(dut.io.op2, 7)
-  expect(dut.io.result, true.B)
+  expect(dut.io.result, true)
   step(5)
   // Greater than or equal operation, 7>=8 = false
   poke(dut.io.sel, 12)
   poke(dut.io.op1, 7)
   poke(dut.io.op2, 8)
-  expect(dut.io.result, false.B)
+  expect(dut.io.result, false)
   step(5)
 
   // Less than operation, 3<4 = true
@@ -131,17 +131,18 @@ class ALUTester(dut: ALU) extends PeekPokeTester(dut) {
   expect(dut.io.result, true)
   step(5)
 
-  // Less than or equall operation, 3<=3 = true
+  // Less than or equal operation, 3<=3 = true
   poke(dut.io.sel, 14)
   poke(dut.io.op1, 3)
   poke(dut.io.op2, 3)
-  expect(dut.io.result, true.B)
+  expect(dut.io.result, true)
   step(5)
-  // Less than or equall operation, 3<=1 = true
+
+  // Less than or equal operation, 3<=1 = true
   poke(dut.io.sel, 14)
   poke(dut.io.op1, 3)
   poke(dut.io.op2, 1)
-  expect(dut.io.result, false.B)
+  expect(dut.io.result, false)
   step(5)
 
 }
