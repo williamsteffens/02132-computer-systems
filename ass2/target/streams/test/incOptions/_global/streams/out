@@ -2,10 +2,16 @@
 [0m[[0m[0mdebug[0m] [0m[0mAbout to delete class files:[0m
 [0m[[0m[0mdebug[0m] [0m[0m	Images$.class[0m
 [0m[[0m[0mdebug[0m] [0m[0m	Images.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	CPUTopTester.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	CPUTopTester$.class[0m
 [0m[[0m[0mdebug[0m] [0m[0mWe backup class files:[0m
 [0m[[0m[0mdebug[0m] [0m[0m	Images$.class[0m
 [0m[[0m[0mdebug[0m] [0m[0m	Images.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	CPUTopTester.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	CPUTopTester$.class[0m
 [0m[[0m[0mdebug[0m] [0m[0mRegistering generated classes:[0m
 [0m[[0m[0mdebug[0m] [0m[0m	Images$.class[0m
 [0m[[0m[0mdebug[0m] [0m[0m	Images.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	CPUTopTester$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	CPUTopTester.class[0m
 [0m[[0m[0mdebug[0m] [0m[0mRemoving the temporary directory used for backing up class files: C:\Users\William\Desktop\02132-computer-systems\CompSys02132\ass2\target\scala-2.12\test-classes.bak[0m
