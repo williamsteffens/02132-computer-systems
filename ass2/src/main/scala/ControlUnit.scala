@@ -11,7 +11,7 @@ class ControlUnit extends Module {
     val immediateOp = Output(Bool())
     val immediateAddr = Output(Bool())
     val immediateRegWrite = Output(Bool())
-    val writeSelI = Output(Bool())
+    val immediateWriteSel = Output(Bool())
     val done = Output(Bool())
   })
 
@@ -23,7 +23,7 @@ class ControlUnit extends Module {
   io.immediateOp := false.B
   io.immediateAddr := false.B
   io.immediateRegWrite := false.B
-  io.writeSelI := false.B
+  io.immediateWriteSel := false.B
   io.done := false.B
 
   // Types
@@ -54,7 +54,7 @@ class ControlUnit extends Module {
 
     // I-type
     is ("b01".U) {
-      io.writeSelI := true.B
+      io.immediateWriteSel := true.B
       // Operation
       switch (io.opcode(5, 4)) {
         is ("b00".U) {

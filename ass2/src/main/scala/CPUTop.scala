@@ -47,7 +47,7 @@ class CPUTop extends Module {
   registerFile.io.writeEnable := controlUnit.io.regWrite
   registerFile.io.aSel := programMemory.io.instructionRead(23, 20)
   registerFile.io.bSel := programMemory.io.instructionRead(19, 16)
-  when (controlUnit.io.writeSelI) {
+  when (controlUnit.io.immediateWriteSel) {
     registerFile.io.writeSel := programMemory.io.instructionRead(19, 16)
   } .otherwise {
     registerFile.io.writeSel := programMemory.io.instructionRead(15, 12)
@@ -71,12 +71,12 @@ class CPUTop extends Module {
 
   // DataMemory
   dataMemory.io.writeEnable := controlUnit.io.dataWrite
-  dataMemory.io.dataWrite := registerFile.io.b
   when (controlUnit.io.immediateAddr) {
     dataMemory.io.address := programMemory.io.instructionRead(15, 0)
   } .otherwise {
-    dataMemory.io.address := registerFile.io.a
+    dataMemory.io.address := registerFile.io.a(15,0)
   }
+  dataMemory.io.dataWrite := registerFile.io.b
 
 
 

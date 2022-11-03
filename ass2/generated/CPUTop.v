@@ -526,7 +526,7 @@ module ControlUnit(
   output       io_immediateOp,
   output       io_immediateAddr,
   output       io_immediateRegWrite,
-  output       io_writeSelI,
+  output       io_immediateWriteSel,
   output       io_done
 );
   wire  _T_1 = 2'h0 == io_opcode[7:6]; // @[Conditional.scala 37:30]
@@ -567,7 +567,7 @@ module ControlUnit(
   assign io_immediateOp = _T_1 ? 1'h0 : _GEN_29; // @[ControlUnit.scala 23:18 ControlUnit.scala 64:26]
   assign io_immediateAddr = _T_1 ? 1'h0 : _GEN_31; // @[ControlUnit.scala 24:20 ControlUnit.scala 73:28 ControlUnit.scala 79:28]
   assign io_immediateRegWrite = _T_1 ? 1'h0 : _GEN_30; // @[ControlUnit.scala 25:24 ControlUnit.scala 69:32]
-  assign io_writeSelI = _T_1 ? 1'h0 : _T_8; // @[ControlUnit.scala 26:16 ControlUnit.scala 57:20]
+  assign io_immediateWriteSel = _T_1 ? 1'h0 : _T_8; // @[ControlUnit.scala 26:24 ControlUnit.scala 57:28]
   assign io_done = _T_1 ? 1'h0 : _GEN_34; // @[ControlUnit.scala 27:11 ControlUnit.scala 92:15]
 endmodule
 module ALU(
@@ -692,7 +692,7 @@ module CPUTop(
   wire  controlUnit_io_immediateOp; // @[CPUTop.scala 27:27]
   wire  controlUnit_io_immediateAddr; // @[CPUTop.scala 27:27]
   wire  controlUnit_io_immediateRegWrite; // @[CPUTop.scala 27:27]
-  wire  controlUnit_io_writeSelI; // @[CPUTop.scala 27:27]
+  wire  controlUnit_io_immediateWriteSel; // @[CPUTop.scala 27:27]
   wire  controlUnit_io_done; // @[CPUTop.scala 27:27]
   wire [31:0] alu_io_op1; // @[CPUTop.scala 28:19]
   wire [31:0] alu_io_op2; // @[CPUTop.scala 28:19]
@@ -700,7 +700,6 @@ module CPUTop(
   wire [31:0] alu_io_result; // @[CPUTop.scala 28:19]
   wire  alu_io_cmpResult; // @[CPUTop.scala 28:19]
   wire [31:0] _GEN_1 = controlUnit_io_memRegWrite ? dataMemory_io_dataRead : alu_io_result; // @[CPUTop.scala 57:44]
-  wire [31:0] _GEN_4 = controlUnit_io_immediateAddr ? {{16'd0}, programMemory_io_instructionRead[15:0]} : registerFile_io_a; // @[CPUTop.scala 75:39]
   ProgramCounter programCounter ( // @[CPUTop.scala 23:30]
     .clock(programCounter_clock),
     .reset(programCounter_reset),
@@ -752,7 +751,7 @@ module CPUTop(
     .io_immediateOp(controlUnit_io_immediateOp),
     .io_immediateAddr(controlUnit_io_immediateAddr),
     .io_immediateRegWrite(controlUnit_io_immediateRegWrite),
-    .io_writeSelI(controlUnit_io_writeSelI),
+    .io_immediateWriteSel(controlUnit_io_immediateWriteSel),
     .io_done(controlUnit_io_done)
   );
   ALU alu ( // @[CPUTop.scala 28:19]
@@ -772,9 +771,9 @@ module CPUTop(
   assign programCounter_io_run = io_run; // @[CPUTop.scala 38:25]
   assign programCounter_io_programCounterJump = programMemory_io_instructionRead[15:0]; // @[CPUTop.scala 41:40]
   assign dataMemory_clock = clock;
-  assign dataMemory_io_address = _GEN_4[15:0]; // @[CPUTop.scala 76:27 CPUTop.scala 78:27]
+  assign dataMemory_io_address = controlUnit_io_immediateAddr ? programMemory_io_instructionRead[15:0] : registerFile_io_a[15:0]; // @[CPUTop.scala 75:27 CPUTop.scala 77:27]
   assign dataMemory_io_writeEnable = controlUnit_io_dataWrite; // @[CPUTop.scala 73:29]
-  assign dataMemory_io_dataWrite = registerFile_io_b; // @[CPUTop.scala 74:27]
+  assign dataMemory_io_dataWrite = registerFile_io_b; // @[CPUTop.scala 79:27]
   assign dataMemory_io_testerEnable = io_testerDataMemEnable; // @[CPUTop.scala 93:30]
   assign dataMemory_io_testerAddress = io_testerDataMemAddress; // @[CPUTop.scala 90:31]
   assign dataMemory_io_testerWriteEnable = io_testerDataMemWriteEnable; // @[CPUTop.scala 94:35]
@@ -790,7 +789,7 @@ module CPUTop(
   assign registerFile_io_aSel = programMemory_io_instructionRead[23:20]; // @[CPUTop.scala 48:24]
   assign registerFile_io_bSel = programMemory_io_instructionRead[19:16]; // @[CPUTop.scala 49:24]
   assign registerFile_io_writeData = controlUnit_io_immediateRegWrite ? {{16'd0}, programMemory_io_instructionRead[15:0]} : _GEN_1; // @[CPUTop.scala 56:31 CPUTop.scala 58:31 CPUTop.scala 60:31]
-  assign registerFile_io_writeSel = controlUnit_io_writeSelI ? programMemory_io_instructionRead[19:16] : programMemory_io_instructionRead[15:12]; // @[CPUTop.scala 51:30 CPUTop.scala 53:30]
+  assign registerFile_io_writeSel = controlUnit_io_immediateWriteSel ? programMemory_io_instructionRead[19:16] : programMemory_io_instructionRead[15:12]; // @[CPUTop.scala 51:30 CPUTop.scala 53:30]
   assign registerFile_io_writeEnable = controlUnit_io_regWrite; // @[CPUTop.scala 47:31]
   assign controlUnit_io_opcode = programMemory_io_instructionRead[31:24]; // @[CPUTop.scala 35:25]
   assign alu_io_op1 = registerFile_io_a; // @[CPUTop.scala 64:14]
