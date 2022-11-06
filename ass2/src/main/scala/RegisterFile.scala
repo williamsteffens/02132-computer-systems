@@ -16,7 +16,7 @@ class RegisterFile extends Module {
   io.a := 0.U
   io.b := 0.U
 
-  // Define registers as a Vec of Reg with init to 0
+  // Define registers as a vec with init to 0
   val registers: Vec[UInt] = RegInit(VecInit(Seq.fill(16)(0.U(32.W))))
 
   // Set register inputs

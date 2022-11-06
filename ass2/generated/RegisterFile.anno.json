@@ -1,0 +1,42 @@
+[
+  {
+    "class":"firrtl.transforms.CombinationalPath",
+    "sink":"~RegisterFile|RegisterFile>io_a",
+    "sources":[
+      "~RegisterFile|RegisterFile>io_aSel"
+    ]
+  },
+  {
+    "class":"firrtl.transforms.CombinationalPath",
+    "sink":"~RegisterFile|RegisterFile>io_b",
+    "sources":[
+      "~RegisterFile|RegisterFile>io_bSel"
+    ]
+  },
+  {
+    "class":"logger.LogLevelAnnotation",
+    "globalLogLevel":{
+      
+    }
+  },
+  {
+    "class":"firrtl.options.TargetDirAnnotation",
+    "directory":"generated"
+  },
+  {
+    "class":"firrtl.stage.phases.DriverCompatibility$TopNameAnnotation",
+    "topName":"RegisterFile"
+  },
+  {
+    "class":"firrtl.options.OutputAnnotationFileAnnotation",
+    "file":"RegisterFile"
+  },
+  {
+    "class":"firrtl.EmitCircuitAnnotation",
+    "emitter":"firrtl.VerilogEmitter"
+  },
+  {
+    "class":"firrtl.transforms.BlackBoxTargetDirAnno",
+    "targetDir":"generated"
+  }
+]
